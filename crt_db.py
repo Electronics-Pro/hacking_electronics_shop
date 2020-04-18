@@ -47,8 +47,8 @@ def crt_ord():
 	if table_exists:
 		print("Table already exists.")
 	else:
-		he_cursor.execute("CREATE TABLE he_orders(order_no int AUTO_INCREMENT PRIMARY KEY,user_id VARCHAR(15),status VARCHAR(255),tracking_id VARCHAR(100))")
-		he_cursor.execute("ALTER TABLE he_users AUTO_INCREMENT=1000001")
+		he_cursor.execute("CREATE TABLE he_orders(order_no int AUTO_INCREMENT PRIMARY KEY,user_id VARCHAR(15) UNIQUE NOT NULL,pay_id VARCHAR(20) NOT NULL,pay_msg VARCHAR(50) NOT NULL,inv_no VARCHAR(20) NOT NULL,status VARCHAR(255) NOT NULL,tracking_id VARCHAR(100) NOT NULL,doa TIMESTAMP)")
+		he_cursor.execute("ALTER TABLE he_orders AUTO_INCREMENT=1000001")
 		print("Table created Successfully.")
 		he_db.commit()
 
@@ -67,7 +67,7 @@ def crt_prod():
 		print("Table already exists.")
 	else:
 		he_cursor.execute("CREATE TABLE he_products(prod_id int(10) AUTO_INCREMENT PRIMARY KEY,prod_nm VARCHAR(255) UNIQUE NOT NULL,prod_categ VARCHAR(255) NOT NULL,prod_price DECIMAL(10,2) NOT NULL,prod_gst int(2) NOT NULL,prod_avail int(10) NOT NULL,prod_desc text NOT NULL,prod_icon VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img1 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img2 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img3 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',doa TIMESTAMP)")
-		he_cursor.execute("ALTER TABLE he_users AUTO_INCREMENT=10001")
+		he_cursor.execute("ALTER TABLE he_products AUTO_INCREMENT=10001")
 		print("Table created Successfully.")
 		he_db.commit()
 
