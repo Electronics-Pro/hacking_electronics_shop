@@ -1,27 +1,19 @@
-import tkinter.ttk as ttk
 import mysql.connector as sql
+import tkinter.ttk as ttk
 import smtplib
 import atexit
 import os
-from email.message import EmailMessage
 from tkinter import *
-from tkinter import messagebox
 from PIL import ImageTk,Image
+from tkinter import messagebox
+from email.message import EmailMessage
 
 #Environment variables
 email_user = os.environ.get('mailus')
 email_pass = os.environ.get('mailpa')
 sql_pass = os.environ.get('mysqlpa')
 
-#global variables
-global city_list
-global mainscrn
-global usern
-global passw
-global logid
-global reg_edit
-reg_edit = False
-logid = ''
+online = True # Set this to True for using app online or False for offline
 
 #defining functions
 def onExit():
@@ -30,9 +22,6 @@ def onExit():
 
 def mainpage():
 	global mainscrn
-	global usern
-	global passw
-	global logid
 	mainscrn = Tk()
 	mainscrn.grab_set()
 	mainscrn.focus_force()
@@ -52,8 +41,8 @@ def mainpage():
 	lbl2 = Label(mainscrn,text="OR")
 	lbl3 = Label(frm1,text="UserID/Email:")
 	lbl4 = Label(frm1,text="Password:")
-	but1 = Button(mainscrn,text="Login",command=login)
-	but2 = Button(mainscrn,text="Register",command=register)
+	but1 = Button(mainscrn,text="Login",command=lambda:login(usern.get(),passw.get()))
+	but2 = Button(mainscrn,text="Register",command=lambda:register(False,""))
 	usern = Entry(frm1,width=35)
 	passw = Entry(frm1,show='*',width=35)
 	bg_topl = ImageTk.PhotoImage(Image.open("images/top_bg.jpg"))
@@ -80,10 +69,8 @@ def mainpage():
 	lbl8.grid(row=0,column=4,rowspan=5)
 	mainscrn.mainloop()
 
-def register():
+def register(reg_edit,username):
 	global mainscrn
-	global logid
-	global reg_edit
 	mainscrn.destroy()
 	mainscrn = Tk()
 	mainscrn.grab_set()
@@ -154,7 +141,7 @@ def register():
 	pincr = Entry(frm2,width=50)
 
 	if reg_edit:
-		sql_query = "SELECT * FROM he_users WHERE user_id = '{}'".format(logid)
+		sql_query = "SELECT * FROM he_users WHERE user_id = '{}'".format(username)
 		he_cursor.execute(sql_query)
 		result = he_cursor.fetchall()
 
@@ -200,7 +187,7 @@ def register():
 
 	but5 = Button(mainscrn,text="Clear",command=reg_clr)
 	but6 = Button(mainscrn,text="Cancel",command=reg_can)
-	but7 = Button(mainscrn,text="Register",command=reg_add)
+	but7 = Button(mainscrn,text="Register",command=lambda:reg_add(reg_edit))
 	but5.grid(row=2,column=0)
 	but6.grid(row=2,column=1)
 	but7.grid(row=2,column=2)
@@ -225,10 +212,7 @@ def reg_can():
 	mainscrn.destroy()
 	mainpage()
 
-def reg_add():
-	global logid
-	global reg_edit
-	global msg
+def reg_add(reg_edit):
 	incom = 12
 	if len(userr.get()) != 0:
 		incom -= 1
@@ -322,10 +306,8 @@ def reg_add():
 							messagebox.showerror("Registration Failed.","Mobile Number/Pincode is not a Number.")
 						else:
 							if reg_edit:
-								sql_query = "DELETE FROM he_users where user_id = '{}'".format(logid)
+								sql_query = "DELETE FROM he_users where user_id = '{}'".format(username)
 								he_cursor.execute(sql_query)
-								reg_edit = False
-								logid = ""
 							sql_query = "INSERT INTO he_users (user_id, email, pass, f_name, l_name, mob, add1, add2, city, state, pin, doj) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',NOW())".format(userr.get(),emair.get(),passr.get(),fnamr.get(),lnamr.get(),mobir.get(),add1r.get(),add2r.get(),cityr.get(),state.get(),pincr.get())
 							he_cursor.execute(sql_query)
 							he_db.commit()
@@ -334,42 +316,41 @@ def reg_add():
 							msg['From'] = email_user
 							msg['To'] = emair.get()
 							msg.set_content("""
-								Hi {}!
-								    You received this email because it was submitted for registration to Hacking Electronics Shop.
+	Hi {}!
+	You received this email because it was submitted for registration to Hacking Electronics Shop.
 
-								    If you would like to Register please reply:
-								        Yes, Please activate my account.
+	If you would like to Register please reply:
+		Yes, Please activate my account.
 
-								    Or else if you would like not to register please reply:
-								        No, do not activate account.
-								""".format(fnamr.get()))
-							send_email()
+	Or else if you would like not to register please reply:
+	    No, do not activate account.
+	""".format(fnamr.get()))
+							#send_email(msg)
 							messagebox.showinfo("Registration Complete","Registration Successful. Please activate account by replying to email sent to your email address and wait for admin approval.")
 							mainscrn.destroy()
 							mainpage()
 				else:
 					messagebox.showerror("Registration Failed!","Email is invalid. Please correct the email address.")
 
-def send_email():
+def send_email(msg):
 	with smtplib.SMTP_SSL('smtp.gmail.com',465) as smtp:
 		smtp.login(email_user,email_pass)
 		smtp.send_message(msg)
 
-def login():
-	global logid
-	global reg_edit
-	if usern.get() == "" and passw.get() == "":
+def login(username,password):
+	global mainscrn
+	if username == "" and password == "":
 		messagebox.showerror("Login Failed!","Please enter User ID and Password.")
-	elif usern.get() == "":
+	elif username == "":
 		messagebox.showerror("Login Failed!","Please enter User ID.")
-	elif passw.get() == "":
+	elif password == "":
 		messagebox.showerror("Login Failed!","Please enter Password.")
 	else:
 		sql_query = "SELECT user_id FROM he_users"
 		he_cursor.execute(sql_query)
 		result = he_cursor.fetchall()
 		for qur_res in result:
-			if usern.get() == qur_res[0]:
+			if username == qur_res[0]:
 				log_id_chk = True
 				break
 			else:
@@ -379,7 +360,7 @@ def login():
 			he_cursor.execute(sql_query)
 			result = he_cursor.fetchall()
 			for qur_res in result:
-				if usern.get() == qur_res[0]:
+				if username == qur_res[0]:
 					log_em_chk = True
 					break
 				else:
@@ -387,43 +368,37 @@ def login():
 		if log_id_chk == False and log_em_chk == False:
 			reg_yesno = messagebox.askyesno("Login Failed!","User not registered. Would you like to register?")
 			if reg_yesno == 1:
-				register()
+				register(False,"")
 		elif log_id_chk:
-			sql_query = "SELECT pass,approved FROM he_users WHERE user_id = '{}'".format(usern.get())
+			sql_query = "SELECT pass,approved FROM he_users WHERE user_id = '{}'".format(username)
 			he_cursor.execute(sql_query)
 			result = he_cursor.fetchall()
-			if passw.get() != result[0][0]:
+			if password != result[0][0]:
 				messagebox.showerror("Login Failed!","Password incorrect!")
 			elif 'n' == result[0][1]:
 				messagebox.showerror("Login Failed!","Registration not verified by admin. Please wait for sometime.")
 			elif 'r' == result[0][1]:
 				messagebox.showerror("Login Failed!","Please make necessary changes in registration as soon as possible in the next window or the registration will be rejected and deleted.")
-				reg_edit = True
-				logid = usern.get()
-				register()
+				register(True,username)
 			else:
 				messagebox.showinfo("Login Success","Login Successful. Please enjoy shopping with us.")
-				logid = usern.get()
-				user_topdeals()
+				user_shop("Top Deals",username)
 		else:
-			sql_query = "SELECT pass,approved FROM he_users WHERE email = '{}'".format(usern.get())
+			sql_query = "SELECT pass,approved FROM he_users WHERE email = '{}'".format(username)
 			he_cursor.execute(sql_query)
 			result = he_cursor.fetchall()
-			if passw.get() != result[0][0]:
+			if password != result[0][0]:
 				messagebox.showerror("Login Failed!","Password incorrect!")
 			elif 'n' == result[0][1]:
 				messagebox.showerror("Login Failed!","Registration not verified by admin. Please wait for sometime.")
 			elif 'r' == result[0][1]:
 				messagebox.showerror("Login Failed!","Please make necessary changes in registration as soon as possible in the next window or the registration will be rejected and deleted.")
-				reg_edit = True
-				logid = usern.get()
-				register()
+				register(True,username)
 			else:
 				messagebox.showinfo("Login Success","Login Successful. Please enjoy shopping with us.")
-				logid = usern.get()
-				user_topdeals()
+				user_shop("Top Deals",username)
 
-def user_topdeals():
+def user_shop(cate_chk,username):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
@@ -442,32 +417,137 @@ def user_topdeals():
 	mainscrn.resizable(0, 0)
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Top Deals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	if cate_chk == "Top Deals":
+		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Top Deals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/best_deals.png"))
+	else:
+		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "New Arrivals":
+		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="New Arrivals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/new_arr.png"))
+	else:
+		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Learning and Robotics":
+		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Learning and Robotics",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/lar.png"))
+	else:
+		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Drones and Parts":
+		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Drones and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/drone.png"))
+	else:
+		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "E-Bikes and Parts":
+		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="E-Bikes and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ebike.png"))
+	else:
+		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "3D Printers and Parts":
+		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="3D Printers and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/3d.png"))
+	else:
+		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Batteries":
+		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Batteries",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/bat.png"))
+	else:
+		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Motors, Drivers, Actuators":
+		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Motors, Drivers, Act...",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mot_act.png"))
+	else:
+		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Development Boards":
+		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Development Boards",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/dev_board.png"))
+	else:
+		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Arduino":
+		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Arduino",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ard.png"))
+	else:
+		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Raspberry Pi":
+		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Raspberry Pi",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/rpi.png"))
+	else:
+		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Sensors":
+		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Sensors",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/sen.png"))
+	else:
+		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "IoT and Wireless":
+		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="IoT and Wireless",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/iot.png"))
+	else:
+		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Electronic Modules":
+		nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Electronic Modules",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_mod.png"))
+	else:
+		nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
 
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/best_deals.png"))
+	if cate_chk == "Electronic Components":
+		nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Electronic Components",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_com.png"))
+	else:
+		nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Wires and Cables":
+		nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Wires and Cables",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/wire.png"))
+	else:
+		nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Instruments and Tools":
+		nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Instruments and Tools",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/tools.png"))
+	else:
+		nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	
+	if cate_chk == "Mechanical Parts":
+		nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mech.png"))
+	else:
+		nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	
 	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
 	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
 	sort_opt = StringVar()
 	sort_opt.set("Discount")
@@ -476,7 +556,11 @@ def user_topdeals():
 	sh_ddon["highlightthickness"]=0
 	sh_ddon["menu"].config(bg="#202020")
 	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search the Store",bg="#202020",fg="white")
+	if cate_chk == "Top Deals" or cate_chk == "New Arrivals":
+		stext = "Search the Store"
+	else:
+		stext = "Search " + cate_chk
+	sh_ser = Button(mainscrn,text=stext,bg="#202020",fg="white")
 
 	ad_crt = LabelFrame(mainscrn,background="#202020")
 	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
@@ -493,1269 +577,11 @@ def user_topdeals():
 	sh_but4.place(x=1060,y=10)
 	sh_ent.place(x=488,y=90)
 	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
+	sh_ser.place(x=865,y=86)
 	ad_crt.place(x=160,y=602)
 	mainscrn.mainloop()
 
-def user_newarr():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="New Arrivals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/new_arr.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search the Store",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_lar():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Learning and Robotics",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/lar.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Learning and Robotics",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_drone():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Drones and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/drone.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Drones and Parts",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_ebike():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="E-Bikes and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ebike.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search E-Bikes and Parts",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_3d():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="3D Printers and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/3d.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search 3D Printers and Parts",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_batt():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Batteries",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/bat.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Batteries",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_mda():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Motors, Drivers, Actuators",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",state=DISABLED,command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mot_act.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Motors, Drivers, Actuators",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_dev():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Development Boards",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",state=DISABLED,command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/dev_board.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Development Boards",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_ard():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Arduino",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ard.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Arduino",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_rpi():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Raspberry Pi",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/rpi.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Raspberry Pi",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_sen():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Sensors",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/sen.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Sensors",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_iot():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="IoT and Wireless",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/iot.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search IoT and Wireless",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_emod():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Electronic Modules",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_mod.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Electronic Modules",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_ecom():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Electronic Comp...",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_com.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Electronic Components",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_wire():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Wires and Cables",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/wire.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Wires and Cables",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_tool():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Instruments and Tools",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",state=DISABLED,command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/tools.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Instruments and Tools",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_mech():
-	global mainscrn
-	mainscrn.destroy()
-	mainscrn = Tk()
-	mainscrn.grab_set()
-	mainscrn.focus_force()
-	mainscrn.title("Hacking Electronics Shop")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
-	width = 1120
-	height = 630
-	screen_width = mainscrn.winfo_screenwidth()
-	screen_height = mainscrn.winfo_screenheight()
-	x = (screen_width/2) - (width/2)
-	y = (screen_height/2) - (height/2) - (height/12)
-	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
-	mainscrn.resizable(0, 0)
-
-	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-
-	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mech.png"))
-	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
-	sort_opt = StringVar()
-	sort_opt.set("Newest")
-	sh_ddon = OptionMenu(shartlb,sort_opt,"Newest","Relevance","Discount","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
-	sh_ddon["highlightthickness"]=0
-	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
-	sh_ser = Button(mainscrn,text="Search Mechanical Parts",bg="#202020",fg="white")
-
-	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=50)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white").grid(row=0,column=1,padx=70)
-	ad_lb2 = Label(ad_crt,text="                  --OR--                                          Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=2)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white").grid(row=0,column=3)
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white").grid(row=0,column=4,padx=80)
-
-	shartlb.place(x=-2,y=-2)
-	navfrm.place(x=0,y=119)
-	sh_but1.place(x=819,y=10)
-	sh_but2.place(x=900,y=10)
-	sh_but3.place(x=975,y=10)
-	sh_but4.place(x=1060,y=10)
-	sh_ent.place(x=488,y=90)
-	sh_ddon.place(x=755,y=86)
-	sh_ser.place(x=865,y=87)
-	ad_crt.place(x=160,y=602)
-	mainscrn.mainloop()
-
-def user_wl():
+def user_wl(username):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
@@ -1775,31 +601,31 @@ def user_wl():
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
 	nav_lbl = Label(navfrm,text="My Wishlist",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless"),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_wl.png"))
 	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,state=DISABLED,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),state=DISABLED,bg="#202020",fg="white")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
 	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
 	sort_opt = StringVar()
 	sort_opt.set("Newest")
@@ -1829,7 +655,7 @@ def user_wl():
 	ad_crt.place(x=160,y=602)
 	mainscrn.mainloop()
 
-def user_ord():
+def user_ord(username):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
@@ -1849,31 +675,31 @@ def user_ord():
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
 	nav_lbl = Label(navfrm,text="My Orders",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless"),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_ord.png"))
 	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,state=DISABLED,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),state=DISABLED,bg="#202020",fg="white")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
 
 	shartlb.place(x=-2,y=-2)
 	navfrm.place(x=0,y=119)
@@ -1883,7 +709,7 @@ def user_ord():
 	sh_but4.place(x=1060,y=10)
 	mainscrn.mainloop()
 
-def user_acc():
+def user_acc(username):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
@@ -1903,31 +729,31 @@ def user_acc():
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
 	nav_lbl = Label(navfrm,text="My Account",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless"),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_acc.png"))
 	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,state=DISABLED,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),state=DISABLED,bg="#202020",fg="white")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
 
 	shartlb.place(x=-2,y=-2)
 	navfrm.place(x=0,y=119)
@@ -1937,7 +763,7 @@ def user_acc():
 	sh_but4.place(x=1060,y=10)
 	mainscrn.mainloop()
 
-def user_cart():
+def user_cart(username):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
@@ -1957,31 +783,31 @@ def user_cart():
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
 	nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=user_topdeals,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=user_newarr,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=user_lar,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=user_drone,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=user_ebike,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=user_3d,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=user_batt,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=user_mda,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=user_dev,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=user_ard,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=user_rpi,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=user_sen,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=user_iot,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Electronic Modules",command=user_emod,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Electronic Components",command=user_ecom,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Wires and Cables",command=user_wire,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Instruments and Tools",command=user_tool,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Mechanical Parts",command=user_mech,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_shop("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_shop("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_shop("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_shop("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_shop("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_shop("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_shop("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_shop("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_shop("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_shop("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_shop("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_shop("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_shop("IoT and Wireless"),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Electronic Modules",command=lambda:user_shop("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Electronic Components",command=lambda:user_shop("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Wires and Cables",command=lambda:user_shop("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Instruments and Tools",command=lambda:user_shop("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Mechanical Parts",command=lambda:user_shop("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_cart.png"))
 	shartlb = Label(mainscrn,image=shopart)
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=user_wl,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=user_ord,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=user_acc,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=user_cart,state=DISABLED,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),state=DISABLED,bg="#202020",fg="white")
 	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
 	sort_opt = StringVar()
 	sort_opt.set("Newest")
