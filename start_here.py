@@ -187,7 +187,7 @@ def register(reg_edit,username):
 
 	but5 = Button(mainscrn,text="Clear",command=reg_clr)
 	but6 = Button(mainscrn,text="Cancel",command=reg_can)
-	but7 = Button(mainscrn,text="Register",command=lambda:reg_add(reg_edit))
+	but7 = Button(mainscrn,text="Register",command=lambda:reg_add(reg_edit,username))
 	but5.grid(row=2,column=0)
 	but6.grid(row=2,column=1)
 	but7.grid(row=2,column=2)
@@ -212,7 +212,7 @@ def reg_can():
 	mainscrn.destroy()
 	mainpage()
 
-def reg_add(reg_edit):
+def reg_add(reg_edit,username):
 	incom = 12
 	if len(userr.get()) != 0:
 		incom -= 1
