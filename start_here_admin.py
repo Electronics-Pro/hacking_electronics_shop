@@ -1,6 +1,7 @@
 import tkinter.ttk as ttk
 import mysql.connector as sql
 import smtplib
+import atexit
 import os
 from email.message import EmailMessage
 from tkinter import *
@@ -14,31 +15,25 @@ email_user = os.environ.get('mailus')
 email_pass = os.environ.get('mailpa')
 sql_pass = os.environ.get('mysqlpa')
 
-#global variables
-global city_list
-global mainscrn
-global usern
-global passw
-global logid
-global editing
-editing = False
-
 #defining functions
+def onExit():
+    he_db.close()
+    messagebox.showinfo("Thank you!","Database and program has been closed.")
+
 def mainpage():
 	global mainscrn
-	global usern
-	global passw
-	global logid
 	mainscrn = Tk()
+	mainscrn.grab_set()
+	mainscrn.focus_force()
 	mainscrn.geometry("640x360")
 	mainscrn.resizable(0, 0)
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
 	frm1 = LabelFrame(mainscrn,text="Please login to continue.")
 	lbl1 = Label(mainscrn,text="Welcome to Hacking Electronics Workshop",font=("Arial Bold",10))
-	lbl3 = Label(frm1,text="UserID/Email:")
+	lbl3 = Label(frm1,text="UserID:")
 	lbl4 = Label(frm1,text="Password:")
-	but1 = Button(mainscrn,text="Login",command=login)
+	but1 = Button(mainscrn,text="Login",command=lambda:login(usern.get(),passw.get()))
 	usern = Entry(frm1,width=35)
 	passw = Entry(frm1,show='*',width=35)
 	bg_topl = ImageTk.PhotoImage(Image.open("images/top_bg.jpg"))
@@ -63,14 +58,13 @@ def mainpage():
 	lbl8.grid(row=0,column=2,rowspan=5)
 	mainscrn.mainloop()
 
-def send_email():
+def send_email(msg):
 	with smtplib.SMTP_SSL('smtp.gmail.com',465) as smtp:
 		smtp.login(email_user,email_pass)
 		smtp.send_message(msg)
 
-def login():
-	global logid
-	if usern.get() == admin_user and passw.get() == admin_pass:
+def login(username,password):
+	if username == admin_user and password == admin_pass:
 		master_login()
 	else:
 		messagebox.showerror("Login Failed","Login Failed. Please check User ID and Password")
@@ -79,16 +73,20 @@ def master_login():
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
+	mainscrn.grab_set()
+	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Admin")
 	mainscrn.iconbitmap('images/icon.ico')
 	lbl1 = Label(mainscrn,text="Welcome Hacking Electronics Admin.",font=("Arial Bold",10))
 	but1 = Button(mainscrn,text="Logout",command=master_logout)
-	but2 = Button(mainscrn,text="Add/Edit Products",command=addedit_prod)
-	but3 = Button(mainscrn,text="Approve Register Requests.",command=approv_reg)
+	but2 = Button(mainscrn,text="Add Products",command=lambda:add_prod('',False))
+	but3 = Button(mainscrn,text="Edit Products",command=edit_prod)
+	but4 = Button(mainscrn,text="Approve/Reject Register Requests.",command=approv_reg)
 	lbl1.grid(row=0,column=0,pady=5)
 	but1.grid(row=1,column=0,pady=5)
 	but2.grid(row=2,column=0,pady=5)
 	but3.grid(row=3,column=0,pady=5)
+	but4.grid(row=4,column=0,pady=5)
 	mainscrn.mainloop()
 
 def master_logout():
@@ -98,18 +96,16 @@ def master_logout():
 
 def approv_reg():
 	global mainscrn
-	global ent1
-	global app_result
 	sql_query = "SELECT * FROM he_users WHERE approved = 'n'"
 	he_cursor.execute(sql_query)
 	app_result = he_cursor.fetchall()
 	if len(app_result) == 0:
 		messagebox.showinfo("No requests.","No requests yet.")
-
 	else:
-		global mainscrn
 		mainscrn.destroy()
 		mainscrn = Tk()
+		mainscrn.grab_set()
+		mainscrn.focus_force()
 		mainscrn.title("Hacking Electronics Admin")
 		mainscrn.iconbitmap('images/icon.ico')
 		mainscrn.geometry("960x550")
@@ -150,99 +146,55 @@ def approv_reg():
 		tree.column("doj",stretch = NO,minwidth = 10, width=125)
 		tree.pack()
 
-		reg_var = ''
-		global rand_var
-		rand_var = 0
 		for qur_res in app_result:
-			rand_var += 1
-			tree.insert('','end',text=rand_var,values=(qur_res[0],qur_res[1],qur_res[3],qur_res[4],qur_res[5],qur_res[6],qur_res[7],qur_res[8],qur_res[9],qur_res[10],qur_res[12]))
+			tree.insert('','end',values=(qur_res[0],qur_res[1],qur_res[3],qur_res[4],qur_res[5],qur_res[6],qur_res[7],qur_res[8],qur_res[9],qur_res[10],qur_res[12]))
 
 		bg_approv_left = ImageTk.PhotoImage(Image.open("images/approv_bg1.jpg"))
 		bg_approv_right = ImageTk.PhotoImage(Image.open("images/approv_bg2.jpg"))
-		lbl1 = Label(frm2,text="Enter Serial number to approve/reject:")
+		lbl1 = Label(frm2,text="Select a user and then click approve/reject:")
 		lbl2 = Label(frm2,image=bg_approv_left)
 		lbl3 = Label(frm2,image=bg_approv_right)
 		ent1 = Entry(frm2,width=10)
-		but1 = Button(frm2,text="Approve",command=approv_ok)
-		but2 = Button(frm2,text="Reject",command=approv_nok)
+		but1 = Button(frm2,text="Approve",command=lambda:ar_user(True,tree))
+		but2 = Button(frm2,text="Reject",command=lambda:ar_user(False,tree))
 		but3 = Button(frm2,text="Return",command=master_login)
-		lbl1.grid(row=0,column=1,columnspan=3,pady=5)
-		ent1.grid(row=1,column=1,sticky=E)
-		but1.grid(row=1,column=2,padx=5,pady=5)
-		but2.grid(row=1,column=3,sticky=W)
-		but3.grid(row=2,column=1,pady=5,ipadx=100,columnspan=3)
+		lbl1.grid(row=0,column=1,columnspan=2,pady=5)
+		but1.grid(row=1,column=1,padx=5,pady=5)
+		but2.grid(row=1,column=2)
+		but3.grid(row=2,column=1,pady=5,padx=10,ipadx=92,columnspan=2)
 		lbl2.grid(row=0,column=0,rowspan=3)
 		lbl3.grid(row=0,column=4,rowspan=3)
 		frm1.pack()
-		frm2.pack()
+		frm2.place(x=-2,y=442)
 		mainscrn.mainloop()
 
-def approv_ok():
-	global ent1
-	global app_result
-	global rand_var
-	try:
-		get_app_res = int(ent1.get()) - 1
-	except:
-		messagebox.showerror("Approval Failed!","Please enter a valid Serial Number.")
-		approv_reg()
+def ar_user(aok,tree):
+	edit_user = tree.item(tree.focus())['values'][0]
+	if aok:
+		approv_ok(edit_user)
 	else:
-		if int(ent1.get()) > rand_var:
-			messagebox.showerror("Approval Failed!","Please enter a valid Serial Number.")
-			approv_reg()
-		else:
-			uid = app_result[get_app_res][0]
-			sql_query = "UPDATE he_users SET approved = 'y' WHERE user_id = '{}'".format(uid)
-			he_cursor.execute(sql_query)
-			he_db.commit()
-			messagebox.showinfo("Approval Success","User has been approved.")
-			approv_reg()
+		approv_nok(edit_user)
 
-def approv_nok():
-	global ent1
-	global app_result
-	global rand_var
-	try:
-		get_app_res = int(ent1.get()) - 1
-	except:
-		messagebox.showerror("Rejection Failed!","Please enter a valid Serial Number.")
-		approv_reg()
-	else:
-		if int(ent1.get()) > rand_var:
-			messagebox.showerror("Rejection Failed!","Please enter a valid Serial Number.")
-			approv_reg()
-		else:
-			uid = app_result[get_app_res][0]
-			sql_query = "UPDATE he_users SET approved = 'r' WHERE user_id = '{}'".format(uid)
-			he_cursor.execute(sql_query)
-			he_db.commit()
-			messagebox.showinfo("Approval Rejected","User has been rejected.")
-			approv_reg()
+def approv_ok(uid):
+	sql_query = "UPDATE he_users SET approved = 'y' WHERE user_id = '{}'".format(uid)
+	he_cursor.execute(sql_query)
+	he_db.commit()
+	messagebox.showinfo("Approval Success","User has been approved.")
+	approv_reg()
 
-def addedit_prod():
+def approv_nok(uid):
+	sql_query = "UPDATE he_users SET approved = 'r' WHERE user_id = '{}'".format(uid)
+	he_cursor.execute(sql_query)
+	he_db.commit()
+	messagebox.showinfo("Approval Rejected","User has been rejected.")
+	approv_reg()
+
+def add_prod(edit_item,editing):
 	global mainscrn
 	mainscrn.destroy()
 	mainscrn = Tk()
-	mainscrn.title("Hacking Electronics Admin")
-	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.resizable(0, 0)
-	lbl1 = Label(mainscrn,text="Would you like to...")
-	but1 = Button(mainscrn,text="Add Product",command=add_prod)
-	but2 = Button(mainscrn,text="Edit Product",command=edit_prod)
-	but3 = Button(mainscrn,text="Return",command=master_login)
-	lbl1.pack(pady=5)
-	but1.pack()
-	but2.pack(pady=5)
-	but3.pack()
-	mainscrn.mainloop()
-
-def add_prod():
-	global mainscrn
-	global logid
-	global editing
-	global edit_item
-	mainscrn.destroy()
-	mainscrn = Tk()
+	mainscrn.grab_set()
+	mainscrn.focus_force()
 	mainscrn.resizable(0, 0)
 	mainscrn.title("Register to Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
@@ -296,7 +248,7 @@ def add_prod():
 	categ = StringVar()
 
 	if editing:
-		sql_query = "SELECT * FROM he_products where prod_id = {}".format(edit_item)
+		sql_query = "SELECT * FROM he_products where prod_id = '{}'".format(edit_item)
 		he_cursor.execute(sql_query)
 		edit_result = he_cursor.fetchall()
 		categ.set(edit_result[0][2])
@@ -317,7 +269,7 @@ def add_prod():
 		img3r.insert(0,"images/product_images/img_unav.jpeg")
 		descr.insert('1.0',"No description yet.")
 
-	categs = ["Beginner Kits","Drone Parts","EBike Parts","3D Printer Parts","Batteries","Motors,Drivers and Actuators",
+	categs = ["Beginner Kits","Drone Parts","EBike Parts","3D Printer Parts","Batteries","Motors, Drivers, Actuators",
 	"Development Boards","Arduino","Raspberry Pi","Sensors","IoT and Wireless","Electronic Modules",
 	"Electronic Components","Wires and Cables","Instruments and Tools","Mechanical Parts"]
 	cater = OptionMenu(frm2,categ,*categs)
@@ -334,8 +286,8 @@ def add_prod():
 	descr.grid(row=9,column=1,ipady=35)
 
 	but5 = Button(mainscrn,text="Clear",command=prod_clr)
-	but6 = Button(mainscrn,text="Cancel",command=addedit_prod)
-	but7 = Button(mainscrn,text="Add",command=prod_add)
+	but6 = Button(mainscrn,text="Cancel",command=master_login)
+	but7 = Button(mainscrn,text="Add",command=lambda:prod_add(edit_item,editing))
 	but5.grid(row=2,column=0,pady=5)
 	but6.grid(row=2,column=1,pady=5)
 	but7.grid(row=2,column=2,pady=5)
@@ -359,11 +311,8 @@ def prod_clr():
 	descr.insert('1.0',"No description yet.")
 	categ.set("Select Category")
 
-def prod_add():
-	global edit_item
-	global editing
+def prod_add(edit_item,editing):
 	add_prob = False
-
 	if len(namer.get()) == 0 or len(namer.get()) > 255:
 		messagebox.showerror("Add product failed","Product name should have less than 255 characters OR No name entered.")
 		add_prob = True
@@ -398,49 +347,46 @@ def prod_add():
 		except:
 			messagebox.showerror("Add product failed","Check location of image")
 		else:
-			if namer.get() == edit_item and editing and not add_prob:
-				sql_query = "UPDATE TABLE he_products SET prod_nm = {},prod_categ = {},prod_price = {},prod_gst = {},prod_avail = {},prod_desc = {},prod_icon = {},prod_img1 = {},prod_img2 = {},prod_img3 = {} WHERE prod_id = {}".format(namer.get(),categ.get(),price,gstrr.get(),avair.get(),descr.get('1.0',END),iconr.get(),img1r.get(),img2r.get(),img3r.get(),edit_item)
-				he_cursor.execute(sql_query)
-				he_db.commit()
-				editing = False
-				messagebox.showinfo("Success","Product edited successfully.")
-				addedit_prod()
-			sql_query = "SELECT prod_nm FROM he_products"
-			he_cursor.execute(sql_query)
-			result = he_cursor.fetchall()
-			for query_result in result:
-				if namer.get() == query_result[0]:
-					messagebox.showerror("Add product failed","Please give unique name to product.")
-					add_prob = True
-					break
-			if not add_prob:
-				if editing:
-					sql_query = "UPDATE TABLE he_products SET prod_nm = {},prod_categ = {},prod_price = {},prod_gst = {},prod_avail = {},prod_desc = {},prod_icon = {},prod_img1 = {},prod_img2 = {},prod_img3 = {} WHERE prod_id = {}".format(namer.get(),categ.get(),price,gstrr.get(),avair.get(),descr.get('1.0',END),iconr.get(),img1r.get(),img2r.get(),img3r.get(),edit_item)
+			if editing and not add_prob:
+				sql_query = "UPDATE he_products SET prod_nm = '{}',prod_categ = '{}',prod_price = {},prod_gst = {},prod_avail = {},prod_desc = '{}',prod_icon = '{}',prod_img1 = '{}',prod_img2 = '{}',prod_img3 = '{}' WHERE prod_id = {}".format(namer.get(),categ.get(),price,gstrr.get(),avair.get(),descr.get('1.0',END),iconr.get(),img1r.get(),img2r.get(),img3r.get(),edit_item)
+				try:
 					he_cursor.execute(sql_query)
+				except:
+					messagebox.showerror("Edit product failed. Please give a unique name/same name as before.")
+				else:
 					he_db.commit()
 					editing = False
 					messagebox.showinfo("Success","Product edited successfully.")
-					addedit_prod()
-				else:
+					master_login()
+			else:
+				sql_query = "SELECT prod_nm FROM he_products"
+				he_cursor.execute(sql_query)
+				result = he_cursor.fetchall()
+				for query_result in result:
+					if namer.get() == query_result[0]:
+						messagebox.showerror("Add product failed","Please give unique name to product.")
+						add_prob = True
+						break
+				if not add_prob:
 					sql_query = "INSERT INTO he_products(prod_nm,prod_categ,prod_price,prod_gst,prod_avail,prod_desc,prod_icon,prod_img1,prod_img2,prod_img3) VALUES('{}','{}',{},{},{},'{}','{}','{}','{}','{}')".format(namer.get(),categ.get(),price,gstrr.get(),avair.get(),descr.get('1.0',END),iconr.get(),img1r.get(),img2r.get(),img3r.get())
 					he_cursor.execute(sql_query)
 					he_db.commit()
 					messagebox.showinfo("Success","Product added successfully.")
-					addedit_prod()
+					master_login()
 
 def edit_prod():
+	global mainscrn
 	sql_query = "SELECT * FROM he_products"
 	he_cursor.execute(sql_query)
 	edit_result = he_cursor.fetchall()
 	if len(edit_result) == 0:
 		messagebox.showinfo("No Products","No products added yet!")
-		addedit_prod()
+		master_login()
 	else:
-		global mainscrn
-		global editing
-		editing = True
 		mainscrn.destroy()
 		mainscrn = Tk()
+		mainscrn.grab_set()
+		mainscrn.focus_force()
 		mainscrn.title("Hacking Electronics Admin")
 		mainscrn.iconbitmap('images/icon.ico')
 		mainscrn.geometry("720x405")
@@ -449,7 +395,6 @@ def edit_prod():
 		frm1 = Frame(mainscrn)
 		scrollbarx = Scrollbar(frm1,orient = HORIZONTAL)
 		scrollbary = Scrollbar(frm1,orient = VERTICAL)
-		global tree
 		tree = ttk.Treeview(frm1,columns = ("prod_nm","prod_categ","prod_price","prod_gst","prod_avail","prod_desc","prod_icon","prod_img1","prod_img2","prod_img3","doa"),height = 12,selectmode = "extended",yscrollcommand = scrollbary.set,xscrollcommand = scrollbarx.set)
 		scrollbary.config(command = tree.yview)
 		scrollbary.pack(side = RIGHT,fill = Y)
@@ -484,21 +429,19 @@ def edit_prod():
 			tree.insert('','end',text=qur_res[0],values=(qur_res[1],qur_res[2],qur_res[3],qur_res[4],qur_res[5],qur_res[6],qur_res[7],qur_res[8],qur_res[9],qur_res[10],qur_res[11]))
 
 		lbl1 = Label(mainscrn,text="Select product to edit and click Edit:")
-		but1 = Button(mainscrn,text="Edit",command=edItem)
-		but2 = Button(mainscrn,text="Exit",command=addedit_prod)
+		but1 = Button(mainscrn,text="Edit",command=lambda:edItem(tree))
+		but2 = Button(mainscrn,text="Exit",command=master_login)
 		lbl1.pack(pady=5)
 		frm1.pack(pady=5)
 		but1.pack(ipadx=100,pady=5)
 		but2.pack(ipadx=100,pady=5)
 		mainscrn.mainloop()
 
-def edItem():
-	global edit_item
-	global tree
+def edItem(tree):
 	selItem1 = tree.focus()
 	selItem = tree.item(selItem1)
 	edit_item = selItem['text']
-	add_prod()
+	add_prod(edit_item,True)
 
 #Check if db and tables are present and continue
 try:
@@ -533,3 +476,5 @@ else:
 		mainpage()
 	else:
 		messagebox.showerror("Application failed","Application failed to load. Error Code: no_tbl")
+
+atexit.register(onExit)
