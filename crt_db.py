@@ -66,8 +66,10 @@ def crt_prod():
 	if table_exists:
 		print("Table already exists.")
 	else:
-		he_cursor.execute("CREATE TABLE he_products(prod_id int(10) AUTO_INCREMENT PRIMARY KEY,prod_nm VARCHAR(255) UNIQUE NOT NULL,prod_categ VARCHAR(255) NOT NULL,prod_price DECIMAL(10,2) NOT NULL,prod_gst int(2) NOT NULL,prod_avail int(10) NOT NULL,prod_desc text NOT NULL,prod_icon VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img1 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img2 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img3 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',doa TIMESTAMP)")
+		he_cursor.execute("CREATE TABLE he_products(prod_id int(10) AUTO_INCREMENT PRIMARY KEY,prod_nm VARCHAR(255) UNIQUE NOT NULL,prod_categ VARCHAR(255) NOT NULL,prod_price DECIMAL(10,2) NOT NULL,prod_dis DECIMAL(4,2) NOT NULL,prod_gst DECIMAL(4,2) NOT NULL,prod_avail int(10) NOT NULL,prod_desc text NOT NULL,prod_icon VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img1 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img2 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',prod_img3 VARCHAR(255) NOT NULL DEFAULT 'images/img_unav.jpeg',doa TIMESTAMP)")
+		he_cursor.execute("ALTER TABLE he_products ENGINE = innodb")
 		he_cursor.execute("ALTER TABLE he_products AUTO_INCREMENT=10001")
+		he_cursor.execute("ALTER TABLE he_products ADD FULLTEXT (prod_nm, prod_categ, prod_desc)")
 		print("Table created Successfully.")
 		he_db.commit()
 
