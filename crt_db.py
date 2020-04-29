@@ -1,7 +1,5 @@
 import mysql.connector as sql
 
-global db_exists
-
 he_db = sql.connect(host="localhost",user="root",passwd="rootLQSyM123987!")
 he_cursor = he_db.cursor()
 he_cursor.execute("SHOW DATABASES")
@@ -47,7 +45,7 @@ def crt_ord():
 	if table_exists:
 		print("Table already exists.")
 	else:
-		he_cursor.execute("CREATE TABLE he_orders(order_no int AUTO_INCREMENT PRIMARY KEY,user_id VARCHAR(15) UNIQUE NOT NULL,pay_id VARCHAR(20) NOT NULL,pay_msg VARCHAR(50) NOT NULL,inv_no VARCHAR(20) NOT NULL,status VARCHAR(255) NOT NULL,tracking_id VARCHAR(100) NOT NULL,doa TIMESTAMP)")
+		he_cursor.execute("CREATE TABLE he_orders(order_no int AUTO_INCREMENT PRIMARY KEY,user_id VARCHAR(15) NOT NULL,g_total DECIMAL(10,2) NOT NULL,pay_mode VARCHAR(10) NOT NULL,pay_id VARCHAR(20) NOT NULL,status VARCHAR(255) NOT NULL,ship_spd VARCHAR(13) NOT NULL,track_id VARCHAR(100) NOT NULL,doa TIMESTAMP)")
 		he_cursor.execute("ALTER TABLE he_orders AUTO_INCREMENT=1000001")
 		print("Table created Successfully.")
 		he_db.commit()
