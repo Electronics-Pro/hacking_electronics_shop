@@ -10,6 +10,26 @@ from PIL import ImageTk,Image
 from tkinter import messagebox
 from reportlab.pdfgen import canvas
 
+mainscrn = Tk()
+mainscrn.grab_set()
+mainscrn.focus_force()
+width = 420
+height = 60
+screen_width = mainscrn.winfo_screenwidth()
+screen_height = mainscrn.winfo_screenheight()
+x = (screen_width/2) - (width/2)
+y = (screen_height/2) - (height/2) - (height/12)
+mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
+mainscrn.resizable(0, 0)
+mainscrn.title("Hacking Electronics Shop")
+mainscrn.iconbitmap('images/icon.ico')
+lblprogress = Label(mainscrn,text="Loading Hacking Electronics Shop... Please Wait.",bg='white')
+progress = ttk.Progressbar(mainscrn, orient = HORIZONTAL,length = 400, mode = 'determinate')
+lblprogress.pack(pady=5)
+progress.pack()
+progress['value'] = 0
+mainscrn.update_idletasks()
+
 #Environment variables
 sql_pass = os.environ.get('mysqlpa')
 
@@ -431,7 +451,7 @@ def user_shop(cate_chk,username,qur_list):
 	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
+	mainscrn.configure(bg='#202020')
 	width = 1120
 	height = 680
 	screen_width = mainscrn.winfo_screenwidth()
@@ -901,7 +921,7 @@ def user_wl(username):
 	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
+	mainscrn.configure(bg='#202020')
 	width = 1120
 	height = 680
 	screen_width = mainscrn.winfo_screenwidth()
@@ -971,7 +991,7 @@ def user_wl(username):
 	tree.column('#6',stretch = NO,minwidth = 10,width = 100)
 	tree.column('#7',stretch = NO,minwidth = 10,width = 95)
 	tree.pack()
-	frm_tree.pack(pady=30,anchor=E,side=BOTTOM)
+	frm_tree.pack(pady=32,anchor=E,side=BOTTOM)
 	
 	if len(qur_list) != 0:
 		imgs_prod = []
@@ -1011,7 +1031,7 @@ def user_ord(username):
 	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
+	mainscrn.configure(bg='#202020')
 	width = 1120
 	height = 680
 	screen_width = mainscrn.winfo_screenwidth()
@@ -1120,7 +1140,7 @@ def user_oprod(tree,username):
 		mainscrn = Tk()
 		mainscrn.grab_set()
 		mainscrn.focus_force()
-		mainscrn.configure(bg='#282923')
+		mainscrn.configure(bg='#202020')
 		width = 960
 		height = 570
 		screen_width = mainscrn.winfo_screenwidth()
@@ -1334,7 +1354,7 @@ def user_acc(username):
 	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
+	mainscrn.configure(bg='#202020')
 	width = 1120
 	height = 680
 	screen_width = mainscrn.winfo_screenwidth()
@@ -1374,6 +1394,8 @@ def user_acc(username):
 	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),state=DISABLED,bg="#202020",fg="white")
 	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
 
+	Button(mainscrn,text="Logout",command=user_logout,bg="#202020",fg="white").place(x=990,y=150)
+
 	shartlb.place(x=-2,y=-2)
 	navfrm.place(x=-2,y=119)
 	sh_but1.place(x=819,y=10)
@@ -1390,7 +1412,7 @@ def user_cart(username):
 	mainscrn.focus_force()
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.configure(bg='#282923')
+	mainscrn.configure(bg='#202020')
 	width = 1120
 	height = 680
 	screen_width = mainscrn.winfo_screenwidth()
@@ -1585,9 +1607,10 @@ Amount: ₹{}/-
 	mainscrn = Tk()
 	mainscrn.grab_set()
 	mainscrn.focus_force()
+	mainscrn.configure(bg='#202020')
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	width = 644
+	width = 654
 	height = 380
 	screen_width = mainscrn.winfo_screenwidth()
 	screen_height = mainscrn.winfo_screenheight()
@@ -1595,12 +1618,12 @@ Amount: ₹{}/-
 	y = (screen_height/2) - (height/2) - (height/18)
 	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
 	mainscrn.resizable(0, 0)
-	lbl = Label(mainscrn,text=tc,justify=LEFT)
+	lbl = Label(mainscrn,text=tc,justify=LEFT,bg="#202020",fg="white")
 	chkvar = IntVar()
-	chkbx = Checkbutton(mainscrn,text="Yes, I agree to the Terms and Conditions and have made the Payment.",variable=chkvar)
-	okbut = Button(mainscrn,text="Continue",command=lambda:user_pay(username,gtotal,shipspd,chkvar.get()))
-	cnbut = Button(mainscrn,text="Cancel",command=lambda:user_cart(username))
-	lbl.grid(row=0,column=0,columnspan=2)
+	chkbx = Checkbutton(mainscrn,text="Yes, I agree to the Terms and Conditions and have made the Payment.",selectcolor="#202020",activebackground="#202020",activeforeground="white",bg="#202020",fg="white",variable=chkvar)
+	okbut = Button(mainscrn,text="Continue",bg="#202020",fg="white",command=lambda:user_pay(username,gtotal,shipspd,chkvar.get()))
+	cnbut = Button(mainscrn,text="Cancel",bg="#202020",fg="white",command=lambda:user_cart(username))
+	lbl.grid(row=0,column=0,columnspan=2,padx=5)
 	chkbx.grid(row=1,column=0,columnspan=2)
 	okbut.grid(row=2,column=0,ipadx=30)
 	cnbut.grid(row=2,column=1,ipadx=30)
@@ -1618,6 +1641,7 @@ def user_pay(username,gtotal,shipspd,chkvar):
 		mainscrn.focus_force()
 		mainscrn.title("Hacking Electronics Shop")
 		mainscrn.iconbitmap('images/icon.ico')
+		mainscrn.configure(bg='#202020')
 		width = 390
 		height = 170
 		screen_width = mainscrn.winfo_screenwidth()
@@ -1629,18 +1653,22 @@ def user_pay(username,gtotal,shipspd,chkvar):
 		
 		payvar = StringVar()
 		payvar.set("Select Payment Mode")
-		Label(mainscrn,text="Please make the payment with Paytm/Google Pay/IMPS\nwith details as on last page. And then enter the\nUPI Transaction ID/Paytm Order No. Below.",justify=LEFT).grid(row=0,column=0,columnspan=2,padx=40)
-		Label(mainscrn,text=" Please select payment mode: ").grid(row=1,column=0,sticky=W,pady=10)
-		OptionMenu(mainscrn,payvar,"Paytm","Google Pay","IMPS").grid(row=1,column=1,sticky=W)
-		Label(mainscrn,text=" Please enter Transaction Number: ").grid(row=2,column=0,sticky=W,pady=10)
-		trne = Entry(mainscrn,width=18)
+		Label(mainscrn,text="Please make the payment with Paytm/Google Pay/IMPS\nwith details as on last page. And then enter the\nUPI Transaction ID/Paytm Order No. Below.",bg="#202020",fg="white",justify=LEFT).grid(row=0,column=0,columnspan=2,padx=40)
+		Label(mainscrn,text=" Please select payment mode: ",bg="#202020",fg="white").grid(row=1,column=0,sticky=W,pady=10)
+		ddon = OptionMenu(mainscrn,payvar,"Paytm","Google Pay","IMPS")
+		ddon.grid(row=1,column=1,sticky=W)
+		ddon.config(bg="#202020",fg="white")
+		ddon["highlightthickness"]=0
+		ddon["menu"].config(bg="#202020")
+		ddon["menu"].config(fg="white")
+		Label(mainscrn,text=" Please enter Transaction Number: ",bg="#202020",fg="white").grid(row=2,column=0,sticky=W,pady=10)
+		trne = Entry(mainscrn,width=18,bg="#202020",fg="white")
 		trne.grid(row=2,column=1,sticky=W)
-		Button(mainscrn,text="Return",command=lambda:user_cart(username)).grid(row=3,column=1,ipadx=30,padx=35)
-		Button(mainscrn,text="Continue",command=lambda:user_paid(username,gtotal,shipspd,payvar.get(),trne.get())).grid(row=3,column=0,ipadx=30,padx=35)
+		Button(mainscrn,text="Return",command=lambda:user_cart(username),bg="#202020",fg="white").grid(row=3,column=1,ipadx=30,padx=35)
+		Button(mainscrn,text="Continue",command=lambda:user_paid(username,gtotal,shipspd,payvar.get(),trne.get()),bg="#202020",fg="white").grid(row=3,column=0,ipadx=30,padx=35)
 		mainscrn.mainloop()
 
 def user_paid(username,gtotal,shipspd,payvar,trxnid):
-	global mainscrn
 	if payvar == "Select Payment Mode":
 		messagebox.showerror("Checkout Failed!","Please select payment mode.")
 	elif payvar == "Paytm" and len(trxnid) != 18:
@@ -1650,6 +1678,27 @@ def user_paid(username,gtotal,shipspd,payvar,trxnid):
 	elif payvar == "IMPS" and len(trxnid) != 12:
 		messagebox.showerror("Checkout Failed!","Invalid Transaction ID Length.")
 	else:
+		global mainscrn
+		mainscrn.destroy()
+		mainscrn = Tk()
+		mainscrn.grab_set()
+		mainscrn.focus_force()
+		width = 420
+		height = 60
+		screen_width = mainscrn.winfo_screenwidth()
+		screen_height = mainscrn.winfo_screenheight()
+		x = (screen_width/2) - (width/2)
+		y = (screen_height/2) - (height/2) - (height/12)
+		mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
+		mainscrn.resizable(0, 0)
+		mainscrn.title("Hacking Electronics Shop")
+		mainscrn.iconbitmap('images/icon.ico')
+		lblprogress = Label(mainscrn,text="Placing Order... Please Wait.",bg='white')
+		progress = ttk.Progressbar(mainscrn, orient = HORIZONTAL,length = 400, mode = 'determinate')
+		lblprogress.pack(pady=5)
+		progress.pack()
+		progress['value'] = 0
+		mainscrn.update_idletasks()
 		sql_query = "SELECT COUNT(order_no) FROM he_orders"
 		he_cursor.execute(sql_query)
 		a = he_cursor.fetchall()
@@ -1659,24 +1708,36 @@ def user_paid(username,gtotal,shipspd,payvar,trxnid):
 		else:
 			sql_query = "INSERT INTO he_orders(user_id,g_total,pay_mode,pay_id,status,ship_spd,track_id,doa) VALUES('{}',{},'{}','{}','Payment Processing','Low Priority','Not Shipped Yet',now())".format(username,gtotal,payvar,trxnid)
 		he_cursor.execute(sql_query)
+		progress['value'] = 25
+		mainscrn.update_idletasks()
 		sql_query = "CREATE TABLE he_{}(prod_id int(10) PRIMARY KEY,prod_qty int(3) NOT NULL)".format(autoinc)
 		he_cursor.execute(sql_query)
+		progress['value'] = 50
+		mainscrn.update_idletasks()
 		sql_query = "SELECT * FROM {}_cart".format(username)
 		he_cursor.execute(sql_query)
 		qur_res = he_cursor.fetchall()
 		for prod_qur in qur_res:
 			sql_query = "INSERT INTO he_{} VALUES({},{})".format(autoinc,prod_qur[0],prod_qur[1])
 			he_cursor.execute(sql_query)
+		progress['value'] = 75
+		mainscrn.update_idletasks()
 		sql_query = "DELETE FROM {}_cart".format(username)
 		he_cursor.execute(sql_query)
 		he_db.commit()
+		progress['value'] = 100
+		mainscrn.update_idletasks()
 		messagebox.showinfo("Order Success!","Order has been placed successfully. Order number {}".format(autoinc))
 		user_ord(username)
+	mainscrn.mainloop()
 
 def user_logout():
 	messagebox.showinfo("Logout successful!","You have been logged out. Thank you for shopping with us. Come back soon!")
 	mainscrn.destroy()
 	mainpage()
+
+progress['value'] = 20
+mainscrn.update_idletasks()
 
 #Check if db and tables are present and continue
 try:
@@ -1684,7 +1745,10 @@ try:
 	he_cursor = he_db.cursor(buffered=True)
 except:
 	messagebox.showerror("Application Failed!","Application failed to load. Error Code: no_db")
+	mainscrn.destroy()
 else:
+	progress['value'] = 40
+	mainscrn.update_idletasks()
 	sql_query = "SHOW TABLES"
 	he_cursor.execute(sql_query)
 	query_result = he_cursor.fetchall()
@@ -1694,12 +1758,16 @@ else:
 			break
 		else:
 			noprob1 = False
+	progress['value'] = 60
+	mainscrn.update_idletasks()
 	for qur in query_result:
 		if qur[0] == "he_products":
 			noprob2 = True
 			break
 		else:
 			noprob2 = False
+	progress['value'] = 80
+	mainscrn.update_idletasks()
 	for qur in query_result:
 		if qur[0] == "he_orders":
 			noprob3 = True
@@ -1707,8 +1775,13 @@ else:
 		else:
 			noprob3 = False
 	if noprob1 and noprob2 and noprob3:
+		progress['value'] = 100
+		mainscrn.update_idletasks()
+		mainscrn.destroy()
 		mainpage()
 	else:
 		messagebox.showerror("Application Failed","Application failed to load. Error Code: no_tbl")
+		mainscrn.destroy()
 		
 atexit.register(onExit)
+mainscrn.mainloop()
