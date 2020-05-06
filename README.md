@@ -1,4 +1,4 @@
-# hacking_electronics_shop
+# hacking_electronics_shop v0.85
 The repository for IP project code... adding details later.
 
 Files:
@@ -15,4 +15,5 @@ Also do not forget to add admin userid, password, email, email password, mysql p
            or add python as a trusted user: https://myaccount.google.com/apppasswords).
 5. mysqlpa: add in your mysql password(considering user is "root").
 
+Install modules using "pip install -r req.txt" with the req.txt file provided.
 Finally add the images folder where your python files are located.
