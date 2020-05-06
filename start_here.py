@@ -23,7 +23,7 @@ mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
 mainscrn.resizable(0, 0)
 mainscrn.title("Hacking Electronics Shop")
 mainscrn.iconbitmap('images/icon.ico')
-lblprogress = Label(mainscrn,text="Loading Hacking Electronics Shop... Please Wait.",bg='white')
+lblprogress = Label(mainscrn,text="Loading Hacking Electronics Shop, Please Wait...",bg='#EEEEEE')
 progress = ttk.Progressbar(mainscrn, orient = HORIZONTAL,length = 400, mode = 'determinate')
 lblprogress.pack(pady=5)
 progress.pack()
@@ -74,39 +74,60 @@ def mainpage():
 	mainscrn.resizable(0, 0)
 	mainscrn.title("Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
+	mainscrn.configure(bg='#202020')
 
-	frm1 = LabelFrame(mainscrn,text="Please login/register to continue.")
-	lbl1 = Label(mainscrn,text="Welcome to Hacking Electronics Workshop",font=("Arial Bold",10))
-	lbl2 = Label(mainscrn,text="OR")
-	lbl3 = Label(frm1,text="UserID/Email:")
-	lbl4 = Label(frm1,text="Password:")
-	but1 = Button(mainscrn,text="Login",command=lambda:login(usern.get(),passw.get()))
-	but2 = Button(mainscrn,text="Register",command=lambda:register(False,""))
-	usern = Entry(frm1,width=35)
-	passw = Entry(frm1,show='*',width=35)
+	frm1 = Frame(mainscrn,bg="#202020")
+	lbl1 = Label(mainscrn,text="Welcome to Hacking Electronics Workshop",font=("Arial Bold",10),fg="#EEEEEE",bg="#202020")
+	lbl2 = Label(frm1,text="Please login/register to continue:",fg="#EEEEEE",bg="#202020")
+	lbl3 = Label(frm1,text="UserID/Email:",fg="#EEEEEE",bg="#202020")
+	lbl4 = Label(frm1,text="Password:",fg="#EEEEEE",bg="#202020")
+	but1 = Button(mainscrn,text="Login",fg="#EEEEEE",bg="#202020",command=lambda:login(usern.get(),passw.get()))
+	but2 = Button(mainscrn,text="Register",fg="#EEEEEE",bg="#202020",command=lambda:register(False,""))
+	but3 = Button(mainscrn,text="Forgot Password",fg="#EEEEEE",bg="#202020",command=lambda:pwdforgot(usern.get()))
+	usern = Entry(frm1,width=35,fg="#EEEEEE",bg="#202020")
+	passw = Entry(frm1,show='*',width=35,fg="#EEEEEE",bg="#202020")
 	bg_topl = ImageTk.PhotoImage(Image.open("images/top_bg.jpg"))
 	bg_botl = ImageTk.PhotoImage(Image.open("images/bottom_bg.jpg"))
 	bg_leftl = ImageTk.PhotoImage(Image.open("images/left_bg.jpg"))
 	bg_rightl = ImageTk.PhotoImage(Image.open("images/right_bg.jpg"))
-	lbl5 = Label(image=bg_topl)
-	lbl6 = Label(image=bg_botl)
-	lbl7 = Label(image=bg_leftl)
-	lbl8 = Label(image=bg_rightl)
+	lbl5 = Label(image=bg_topl,fg="#EEEEEE",bg="#202020")
+	lbl6 = Label(image=bg_botl,fg="#EEEEEE",bg="#202020")
+	lbl7 = Label(image=bg_leftl,fg="#EEEEEE",bg="#202020")
+	lbl8 = Label(image=bg_rightl,fg="#EEEEEE",bg="#202020")
 
 	frm1.grid(row=2,column=1,columnspan=3)
 	lbl1.grid(row=1,column=1,columnspan=3)
-	lbl2.grid(row=3,column=2)
-	lbl3.grid(row=0,column=0,sticky=E)
-	lbl4.grid(row=1,column=0,sticky=E)
+	lbl2.grid(row=0,column=0,columnspan=2,sticky=W)
+	lbl3.grid(row=1,column=0,sticky=E)
+	lbl4.grid(row=2,column=0,sticky=E)
 	but1.grid(row=3,column=1)
 	but2.grid(row=3,column=3)
-	usern.grid(row=0,column=1)
-	passw.grid(row=1,column=1)
+	but3.grid(row=3,column=2)
+	usern.grid(row=1,column=1)
+	passw.grid(row=2,column=1)
 	lbl5.grid(row=0,column=1,columnspan=3)
 	lbl6.grid(row=4,column=1,columnspan=3)
 	lbl7.grid(row=0,column=0,rowspan=5)
 	lbl8.grid(row=0,column=4,rowspan=5)
 	mainscrn.mainloop()
+
+def pwdforgot(user):
+	if len(user) == 0:
+		messagebox.showerror("Password Request Failed!","Please enter username/email.")
+	else:
+		sql_query = "SELECT * FROM he_users WHERE user_id = '{}'".format(user)
+		he_cursor.execute(sql_query)
+		uinfo = he_cursor.fetchall()
+		if len(uinfo) == 0:
+			sql_query = "SELECT * FROM he_users WHERE email = '{}'".format(user)
+			he_cursor.execute(sql_query)
+			uinfo = he_cursor.fetchall()
+			if len(uinfo) == 0:
+				messagebox.showerror("Password Request Failed!","This account does not exist.")
+			else:
+				messagebox.showinfo("Password Request Success!","This feature is still under development.")
+		else:
+			messagebox.showinfo("Password Request Success!","This feature is still under development.")
 
 def register(reg_edit,username):
 	global mainscrn
@@ -124,22 +145,21 @@ def register(reg_edit,username):
 	mainscrn.resizable(0, 0)
 	mainscrn.title("Register to Hacking Electronics Shop")
 	mainscrn.iconbitmap('images/icon.ico')
-	mainscrn.grab_set()
-	mainscrn.focus()
+	mainscrn.configure(bg='#202020')
 	
-	frm2 = LabelFrame(mainscrn)
-	lbl7 = Label(mainscrn,text="Please enter your details",font=("Arial Bold",10))
-	lbl8 = Label(frm2,text="User ID:")
-	lbl9 = Label(frm2,text="Email Add.:")
-	lbl10 = Label(frm2,text="Password:")
-	lbl11 = Label(frm2,text="Retype:")
-	lbl12 = Label(frm2,text="First Name:")
-	lbl13 = Label(frm2,text="Last Name:")
-	lbl14 = Label(frm2,text="Mobile:")
-	lbl15 = Label(frm2,text="Address:")
-	lbl16 = Label(frm2,text="City:")
-	lbl17 = Label(frm2,text="State:")
-	lbl18 = Label(frm2,text="Pincode:")
+	frm2 = Frame(mainscrn,bg="#202020")
+	lbl7 = Label(mainscrn,text="Please enter your details",fg="#EEEEEE",bg="#202020",font=("Arial Bold",10))
+	lbl8 = Label(frm2,text="User ID:",fg="#EEEEEE",bg="#202020")
+	lbl9 = Label(frm2,text="Email Add.:",fg="#EEEEEE",bg="#202020")
+	lbl10 = Label(frm2,text="Password:",fg="#EEEEEE",bg="#202020")
+	lbl11 = Label(frm2,text="Retype:",fg="#EEEEEE",bg="#202020")
+	lbl12 = Label(frm2,text="Firstname:",fg="#EEEEEE",bg="#202020")
+	lbl13 = Label(frm2,text="Lastname:",fg="#EEEEEE",bg="#202020")
+	lbl14 = Label(frm2,text="Mobile:",fg="#EEEEEE",bg="#202020")
+	lbl15 = Label(frm2,text="Address:",fg="#EEEEEE",bg="#202020")
+	lbl16 = Label(frm2,text="City:",fg="#EEEEEE",bg="#202020")
+	lbl17 = Label(frm2,text="State:",fg="#EEEEEE",bg="#202020")
+	lbl18 = Label(frm2,text="Pincode:",fg="#EEEEEE",bg="#202020")
 	frm2.grid(row=1,column=0,columnspan=3,padx=4)
 	lbl7.grid(row=0,column=0,columnspan=3)
 	lbl8.grid(row=0,column=0,sticky=E)
@@ -167,17 +187,17 @@ def register(reg_edit,username):
 	global pincr
 	global state
 	
-	userr = Entry(frm2,width=50)
-	emair = Entry(frm2,width=50)
-	passr = Entry(frm2,show='*',width=50)
-	agair = Entry(frm2,show='*',width=50)
-	fnamr = Entry(frm2,width=50)
-	lnamr = Entry(frm2,width=50)
-	mobir = Entry(frm2,width=50)
-	add1r = Entry(frm2,width=50)
-	add2r = Entry(frm2,width=50)
-	cityr = Entry(frm2,width=50)
-	pincr = Entry(frm2,width=50)
+	userr = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	emair = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	passr = Entry(frm2,show='*',width=50,fg="#EEEEEE",bg="#202020")
+	agair = Entry(frm2,show='*',width=50,fg="#EEEEEE",bg="#202020")
+	fnamr = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	lnamr = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	mobir = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	add1r = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	add2r = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	cityr = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
+	pincr = Entry(frm2,width=50,fg="#EEEEEE",bg="#202020")
 
 	if reg_edit:
 		sql_query = "SELECT * FROM he_users WHERE user_id = '{}'".format(username)
@@ -210,6 +230,10 @@ def register(reg_edit,username):
 	"Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttaranchal","West Bengal"]
 
 	sttdw = OptionMenu(frm2,state,*states)
+	sttdw.config(bg="#202020",fg="#EEEEEE")
+	sttdw["highlightthickness"]=0
+	sttdw["menu"].config(bg="#202020")
+	sttdw["menu"].config(fg="#EEEEEE")
 	
 	userr.grid(row=0,column=1)
 	emair.grid(row=1,column=1)
@@ -224,12 +248,12 @@ def register(reg_edit,username):
 	sttdw.grid(row=10,column=1,sticky=W)
 	pincr.grid(row=11,column=1)
 
-	but5 = Button(mainscrn,text="Clear",command=reg_clr)
-	but6 = Button(mainscrn,text="Cancel",command=reg_can)
-	but7 = Button(mainscrn,text="Register",command=lambda:reg_add(reg_edit,username))
-	but5.grid(row=2,column=0)
-	but6.grid(row=2,column=1)
-	but7.grid(row=2,column=2)
+	but5 = Button(mainscrn,text="Clear",fg="#EEEEEE",bg="#202020",command=reg_clr)
+	but6 = Button(mainscrn,text="Cancel",fg="#EEEEEE",bg="#202020",command=reg_can)
+	but7 = Button(mainscrn,text="Register",fg="#EEEEEE",bg="#202020",command=lambda:reg_add(reg_edit,username))
+	but5.grid(row=2,column=0,pady=10)
+	but6.grid(row=2,column=1,pady=10)
+	but7.grid(row=2,column=2,pady=10)
 
 	mainscrn.mainloop()
 
@@ -252,121 +276,117 @@ def reg_can():
 	mainpage()
 
 def reg_add(reg_edit,username):
-	add_prob = False
-	if len(userr.get()) == 0 or len(userr.get()) > 255:
-		messagebox.showerror("Registration Failed!","Username not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(emair.get()) == 0 or len(emair.get()) > 255:
-		messagebox.showerror("Registration Failed!","Email not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(passr.get()) == 0 or len(passr.get()) > 255:
-		messagebox.showerror("Registration Failed!","Password not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(agair.get()) == 0 or len(agair.get()) > 255:
-		messagebox.showerror("Registration Failed!","Password again not entered.")
-		add_prob = True
-	if len(fnamr.get()) == 0 or len(fnamr.get()) > 255:
-		messagebox.showerror("Registration Failed!","First Name not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(lnamr.get()) == 0 or len(lnamr.get()) > 255:
-		messagebox.showerror("Registration Failed!","Last Name not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(mobir.get()) == 0:
+	if len(userr.get()) == 0:
+		messagebox.showerror("Registration Failed!","Username not entered.")
+	elif len(userr.get()) > 255:
+		messagebox.showerror("Registration Failed!","Username is longer than 255 characters.")
+	elif len(emair.get()) == 0:
+		messagebox.showerror("Registration Failed!","Email not entered.")
+	elif len(emair.get()) > 255:
+		messagebox.showerror("Registration Failed!","Email is longer than 255 characters.")
+	elif len(passr.get()) == 0:
+		messagebox.showerror("Registration Failed!","Password not entered.")
+	elif len(passr.get()) > 255:
+		messagebox.showerror("Registration Failed!","Password is longer than 255 characters.")
+	elif len(fnamr.get()) == 0:
+		messagebox.showerror("Registration Failed!","Firstname not entered.")
+	elif len(fnamr.get()) > 255:
+		messagebox.showerror("Registration Failed!","Firstname is longer than 255 characters.")
+	elif len(lnamr.get()) == 0:
+		messagebox.showerror("Registration Failed!","Lastname not entered.")
+	elif len(lnamr.get()) > 255:
+		messagebox.showerror("Registration Failed!","Lastname is longer than 255 characters.")
+	elif len(mobir.get()) == 0:
 		messagebox.showerror("Registration Failed!","Mobile Number not entered.")
-		add_prob = True
-	if len(add1r.get()) == 0 or len(add1r.get()) > 255:
-		messagebox.showerror("Registration Failed!","Address 1 not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(add2r.get()) == 0 or len(add2r.get()) > 255:
-		messagebox.showerror("Registration Failed!","Address 2 not entered or is longer than 255 characters.")
-		add_prob = True
-	if len(pincr.get()) == 0:
+	elif len(add1r.get()) == 0:
+		messagebox.showerror("Registration Failed!","Address 1 not entered.")
+	elif len(add1r.get()) > 255:
+		messagebox.showerror("Registration Failed!","Address 1 is longer than 255 characters.")
+	elif len(add2r.get()) == 0:
+		messagebox.showerror("Registration Failed!","Address 2 not entered.")
+	elif len(add2r.get()) > 255:
+		messagebox.showerror("Registration Failed!","Address 2 is longer than 255 characters.")
+	elif len(pincr.get()) == 0:
 		messagebox.showerror("Registration Failed!","Pincode not entered.")
-		add_prob = True
-	if len(cityr.get()) == 0 or len(cityr.get()) > 255:
-		messagebox.showerror("Registration Failed!","City not entered or is longer than 255 characters.")
-		add_prob = True
-	if state.get() == "Select State":
+	elif len(cityr.get()) == 0:
+		messagebox.showerror("Registration Failed!","City not entered.")
+	elif len(cityr.get()) > 255:
+		messagebox.showerror("Registration Failed!","City is longer than 255 characters.")
+	elif state.get() == "Select State":
 		messagebox.showerror("Registration Failed!","Please enter your State.")
-		add_prob = True
-
-	if add_prob:
-		return
+	elif passr.get() != agair.get():
+		messagebox.showerror("Registration Failed!","Passwords do not match.")
+	elif len(pincr.get()) != 6:
+		messagebox.showerror("Registration Failed!","Pincode is not of 6 digits.")
+	elif len(mobir.get()) != 10:
+		messagebox.showerror("Registration Failed!","Mobile number is not of 10 digits.")
+	elif len(emair.get()) < 7:
+		messagebox.showerror("Registration Failed!","Email is invalid. Please correct the email address.")
 	else:
-		if passr.get() != agair.get():
-			messagebox.showerror("Registration Failed!","Passwords do not match.")
-		elif len(pincr.get()) != 6:
-			messagebox.showerror("Registration Failed!","Pincode is not of 6 digits.")
-		elif len(mobir.get()) != 10:
-			messagebox.showerror("Registration Failed!","Mobile number is not of 10 digits.")
-		else:
-			if len(emair.get()) < 7:
-				messagebox.showerror("Registration Failed!","Email is invalid. Please correct the email address.")
+		at = 0
+		for ch in emair.get():
+			if ch == "@":
+				at += 1
+		em_chk = ""
+		for chno in range(-1,-5,-1):
+			em_chk += emair.get()[chno]
+		if em_chk == "moc." and at == 1:
+			sql_query = "SELECT user_id FROM he_users"
+			he_cursor.execute(sql_query)
+			result = he_cursor.fetchall()
+			if len(result) == 0:
+				inv_em = False
+				inv_id = False
+				inv_mo = False
 			else:
-				at = 0
-				for ch in emair.get():
-					if ch == "@":
-						at += 1
-				em_chk = ""
-				for chno in range(-1,-5,-1):
-					em_chk += emair.get()[chno]
-				if em_chk == "moc." and at == 1:
-					sql_query = "SELECT user_id FROM he_users"
-					he_cursor.execute(sql_query)
-					result = he_cursor.fetchall()
-					if len(result) == 0:
-						inv_em = False
+				for qur_res in result:
+					if qur_res[0] == userr.get() and not reg_edit:
+						inv_id = True
+						break
+					else:
 						inv_id = False
+				sql_query = "SELECT email FROM he_users"
+				he_cursor.execute(sql_query)
+				result = he_cursor.fetchall()
+				for qur_res in result:
+					if qur_res[0] == emair.get() and not reg_edit:
+						inv_em = True
+						break
+					else:
+						inv_em = False
+				sql_query = "SELECT mob FROM he_users"
+				he_cursor.execute(sql_query)
+				result = he_cursor.fetchall()
+				for qur_res in result:
+					if qur_res[0] == mobir.get() and not reg_edit:
+						inv_mo = True
+						break
+					else:
 						inv_mo = False
-					else:
-						for qur_res in result:
-							if qur_res[0] == userr.get() and not reg_edit:
-								inv_id = True
-								break
-							else:
-								inv_id = False
-						sql_query = "SELECT email FROM he_users"
-						he_cursor.execute(sql_query)
-						result = he_cursor.fetchall()
-						for qur_res in result:
-							if qur_res[0] == emair.get() and not reg_edit:
-								inv_em = True
-								break
-							else:
-								inv_em = False
-						sql_query = "SELECT mob FROM he_users"
-						he_cursor.execute(sql_query)
-						result = he_cursor.fetchall()
-						for qur_res in result:
-							if qur_res[0] == mobir.get() and not reg_edit:
-								inv_mo = True
-								break
-							else:
-								inv_mo = False
-					if inv_id:
-						messagebox.showerror("Registration Failed!","User ID taken. Please try something else.")
-					elif inv_em:
-						messagebox.showerror("Registration Failed!","Email Registered. Please try something else.")
-					elif inv_mo:
-						messagebox.showerror("Registration Failed!","Mobile Number Registered. Please try something else.")
-					else:
-						try:
-							int(mobir.get())
-							int(pincr.get())
-						except:
-							messagebox.showerror("Registration Failed!","Mobile Number/Pincode is not a Number.")
-						else:
-							if reg_edit:
-								sql_query = "DELETE FROM he_users where user_id = '{}'".format(username)
-								he_cursor.execute(sql_query)
-							sql_query = "INSERT INTO he_users (user_id, email, pass, f_name, l_name, mob, add1, add2, city, state, pin, doj) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',NOW())".format(userr.get(),emair.get(),passr.get(),fnamr.get(),lnamr.get(),mobir.get(),add1r.get(),add2r.get(),cityr.get(),state.get(),pincr.get())
-							he_cursor.execute(sql_query)
-							he_db.commit()
-							messagebox.showinfo("Registration Complete!","Registration Successful. Please activate account by replying to email sent to your email address and wait for admin approval.")
-							mainscrn.destroy()
-							mainpage()
+			if inv_id:
+				messagebox.showerror("Registration Failed!","User ID taken. Please try something else.")
+			elif inv_em:
+				messagebox.showerror("Registration Failed!","Email Registered. Please try something else.")
+			elif inv_mo:
+				messagebox.showerror("Registration Failed!","Mobile Number Registered. Please try something else.")
+			else:
+				try:
+					int(mobir.get())
+					int(pincr.get())
+				except:
+					messagebox.showerror("Registration Failed!","Mobile Number/Pincode is not a Number.")
 				else:
-					messagebox.showerror("Registration Failed!","Email is invalid. Please correct the email address.")
+					if reg_edit:
+						sql_query = "DELETE FROM he_users where user_id = '{}'".format(username)
+						he_cursor.execute(sql_query)
+					sql_query = "INSERT INTO he_users (user_id, email, pass, f_name, l_name, mob, add1, add2, city, state, pin, doj) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',NOW())".format(userr.get(),emair.get(),passr.get(),fnamr.get(),lnamr.get(),mobir.get(),add1r.get(),add2r.get(),cityr.get(),state.get(),pincr.get())
+					he_cursor.execute(sql_query)
+					he_db.commit()
+					messagebox.showinfo("Registration Complete!","Registration Successful. Please activate account by replying to email sent to your email address and wait for admin approval.")
+					mainscrn.destroy()
+					mainpage()
+		else:
+			messagebox.showerror("Registration Failed!","Email is invalid. Please correct the email address.")
 
 def login(username,password):
 	global mainscrn
@@ -463,149 +483,153 @@ def user_shop(cate_chk,username,qur_list):
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
 	if cate_chk == "Top Deals":
-		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Top Deals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Top Deals",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/best_deals.png"))
 	else:
-		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+		nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "New Arrivals":
-		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="New Arrivals",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="New Arrivals",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/new_arr.png"))
 	else:
-		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+		nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Learning and Robotics":
-		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Learning and Robotics",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Learning and Robotics",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/lar.png"))
 	else:
-		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+		nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Drones and Parts":
-		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Drones and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Drones and Parts",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/drone.png"))
 	else:
-		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+		nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "E-Bikes and Parts":
-		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="E-Bikes and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="E-Bikes and Parts",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ebike.png"))
 	else:
-		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+		nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "3D Printers and Parts":
-		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="3D Printers and Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="3D Printers and Parts",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/3d.png"))
 	else:
-		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+		nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Batteries":
-		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Batteries",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Batteries",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/bat.png"))
 	else:
-		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+		nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Motors, Drivers, Actuators":
-		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Motors, Drivers, Act...",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Motors, Drivers, Act...",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mot_act.png"))
 	else:
-		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+		nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Development Boards":
-		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Development Boards",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Development Boards",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/dev_board.png"))
 	else:
-		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+		nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Arduino":
-		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Arduino",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Arduino",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ard.png"))
 	else:
-		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+		nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Raspberry Pi":
-		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Raspberry Pi",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Raspberry Pi",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/rpi.png"))
 	else:
-		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+		nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Sensors":
-		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Sensors",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Sensors",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/sen.png"))
 	else:
-		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+		nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "IoT and Wireless":
-		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="IoT and Wireless",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="IoT and Wireless",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/iot.png"))
 	else:
-		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+		nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Displays":
-		nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Displays",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Displays",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/dis.png"))
 	else:
-		nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+		nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
 
 	if cate_chk == "Power Supply":
-		nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Power Supply",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Power Supply",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/ps.png"))
 	else:
-		nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+		nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
 
 	if cate_chk == "Electronic Modules":
-		nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Electronic Modules",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Electronic Modules",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_mod.png"))
 	else:
-		nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+		nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
 
 	if cate_chk == "Electronic Components":
-		nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Electronic Components",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Electronic Components",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/e_com.png"))
 	else:
-		nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+		nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Wires and Cables":
-		nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Wires and Cables",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Wires and Cables",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/wire.png"))
 	else:
-		nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+		nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Instruments and Tools":
-		nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Instruments and Tools",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Instruments and Tools",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/tools.png"))
 	else:
-		nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+		nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
 	
 	if cate_chk == "Mechanical Parts":
-		nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
-		nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+		nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),state=DISABLED,relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+		nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/mech.png"))
 	else:
-		nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+		nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+
+	if cate_chk == "Search":
+		shopart = ImageTk.PhotoImage(Image.open("images/shop_art/best_deals.png"))
+		nav_lbl = Label(navfrm,text="Search Results",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
 
 	frm_tree = Frame(mainscrn,background="#909090")
 	style = ttk.Style(frm_tree)
 	style.theme_use("clam")
-	style.configure("Treeview.Heading",background="#202020",foreground="white",borderwidth=0)
+	style.configure("Treeview.Heading",background="#202020",foreground="#EEEEEE",borderwidth=0)
 	style.configure("Treeview",borderwidth=0,rowheight=56)
 	scrollbary = Scrollbar(frm_tree,orient = VERTICAL)
 	tree = ttk.Treeview(frm_tree,columns = ("PID","Product Name","Price","Discount","GST","Total","Availablity"),height = 9,selectmode = "extended",yscrollcommand = scrollbary.set)
@@ -642,31 +666,35 @@ def user_shop(cate_chk,username,qur_list):
 			a+=1
 
 	shartlb = Label(mainscrn,image=shopart,background="#909090")
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
-	sh_ent = Entry(mainscrn,bg="#202020",fg="white",width=30)
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="#EEEEEE")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="#EEEEEE")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="#EEEEEE")
+	sh_ent = Entry(mainscrn,bg="#202020",fg="#EEEEEE",width=30)
 	sort_opt = StringVar()
 	sort_opt.set("Relevance")
 	sh_ddon = OptionMenu(shartlb,sort_opt,"Relevance","Discount","Newest","Oldest","Price L to H","Price H to L","A to Z","Z to A")
-	sh_ddon.config(bg="#202020",fg="white")
+	sh_ddon.config(bg="#202020",fg="#EEEEEE")
 	sh_ddon["highlightthickness"]=0
 	sh_ddon["menu"].config(bg="#202020")
-	sh_ddon["menu"].config(fg="white")
+	sh_ddon["menu"].config(fg="#EEEEEE")
 	if cate_chk == "Top Deals" or cate_chk == "New Arrivals":
 		stext = "Search the Store"
 	else:
 		stext = "Search " + cate_chk
-	sh_ser = Button(mainscrn,text=stext,bg="#202020",fg="white",command=lambda:user_search(username,cate_chk,sh_ent.get(),sort_opt.get()))
+	
+	if cate_chk == "Search":
+		sh_ser = Button(mainscrn,text=stext,bg="#202020",fg="#EEEEEE",command=lambda:user_search(username,cate_chk,sh_ent.get(),sort_opt.get()),state=DISABLED)
+	else:
+		sh_ser = Button(mainscrn,text=stext,bg="#202020",fg="#EEEEEE",command=lambda:user_search(username,cate_chk,sh_ent.get(),sort_opt.get()))
 
 	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=40)
-	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="white",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=40,pady=2)
-	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="white",command=lambda:user_addwl(username,tree)).grid(row=0,column=2,padx=50)
-	ad_lb2 = Label(ad_crt,text="               OR                           Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=3)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white",buttonbackground="#202020")
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white",command=lambda:user_addcart(username,ad_spn.get(),tree))
+	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=40)
+	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="#EEEEEE",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=40,pady=2)
+	ad_wli = Button(ad_crt,text="Add to Wishlist",bg="#202020",fg="#EEEEEE",command=lambda:user_addwl(username,tree)).grid(row=0,column=2,padx=50)
+	ad_lb2 = Label(ad_crt,text="               OR                           Specify Quantity:  ",bg="#202020",fg="#EEEEEE").grid(row=0,column=3)
+	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="#EEEEEE",buttonbackground="#202020")
+	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="#EEEEEE",command=lambda:user_addcart(username,ad_spn.get(),tree))
 	ad_spn.grid(row=0,column=4)
 	ad_crb.grid(row=0,column=5,padx=60)
 
@@ -777,7 +805,7 @@ def user_search(username,cate_chk,serkey,sort_by):
 			sql_query = "SELECT * FROM he_products WHERE MATCH (prod_nm, prod_categ, prod_desc) AGAINST ('{}') > 0 && prod_categ = '{}' ORDER BY prod_nm DESC".format(serkey,serkey,cate_chk)
 	he_cursor.execute(sql_query)
 	qur_list = he_cursor.fetchall()
-	user_shop(cate_chk,username,qur_list)
+	user_shop("Search",username,qur_list)
 
 def user_proddet(tree):
 	try:
@@ -802,12 +830,15 @@ def user_proddet(tree):
 
 		frame = Frame(proddet,width=800,height=680)
 		frame.pack()
-		canvas = Canvas(frame,width=800,height=680,bg="white")
-		canvas.config(scrollregion=(-400,300,5000,5000))
+		canvas = Canvas(frame,width=800,height=680,bg="#EEEEEE")
+		canvas.config(scrollregion=(-400,300,2000,5000))
 		vbar = Scrollbar(frame,orient=VERTICAL)
 		vbar.pack(side=RIGHT,fill=Y)
 		vbar.config(command=canvas.yview)
-		canvas.config(yscrollcommand=vbar.set)
+		hbar = Scrollbar(frame,orient=HORIZONTAL)
+		hbar.pack(side=BOTTOM,fill=X)
+		hbar.config(command=canvas.xview)
+		canvas.config(yscrollcommand=vbar.set,xscrollcommand=hbar.set)
 		canvas.pack()
 
 		sql_query = "SELECT prod_img1,prod_img2,prod_img3,prod_desc FROM he_products WHERE prod_id = {}".format(prod_id)
@@ -816,11 +847,11 @@ def user_proddet(tree):
 		img1 = ImageTk.PhotoImage(Image.open(qur_res[0][0]))
 		img2 = ImageTk.PhotoImage(Image.open(qur_res[0][1]))
 		img3 = ImageTk.PhotoImage(Image.open(qur_res[0][2]))
-		prd_des = Label(canvas,text=qur_res[0][3])
+		prd_des = Label(canvas,text=qur_res[0][3],justify=LEFT)
 		canvas.create_image(400,600,image=img1)
 		canvas.create_image(400,1200,image=img2)
 		canvas.create_image(400,1800,image=img3)
-		canvas.create_window((400,2400),window=prd_des)
+		canvas.create_window((800,2400),window=prd_des)
 
 		proddet.mainloop()
 
@@ -932,34 +963,34 @@ def user_wl(username):
 	mainscrn.resizable(0, 0)
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="My Wishlist",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
-	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+	nav_lbl = Label(navfrm,text="My Wishlist",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_wl.png"))
 	shartlb = Label(mainscrn,image=shopart,background="#909090")
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),state=DISABLED,bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),state=DISABLED,bg="#202020",fg="#EEEEEE")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="#EEEEEE")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="#EEEEEE")
 
 	sql_query = "SELECT * FROM {}_wl,he_products WHERE {}_wl.prod_id = he_products.prod_id".format(username,username)
 	he_cursor.execute(sql_query)
@@ -968,7 +999,7 @@ def user_wl(username):
 	frm_tree = Frame(mainscrn,background="#909090")
 	style = ttk.Style(frm_tree)
 	style.theme_use("clam")
-	style.configure("Treeview.Heading",background="#202020",foreground="white",borderwidth=0)
+	style.configure("Treeview.Heading",background="#202020",foreground="#EEEEEE",borderwidth=0)
 	style.configure("Treeview",borderwidth=0,rowheight=56)
 	scrollbary = Scrollbar(frm_tree,orient = VERTICAL)
 	tree = ttk.Treeview(frm_tree,columns = ("PID","Product Name","Price","Discount","GST","Total","Availablity"),height = 9,selectmode = "extended",yscrollcommand = scrollbary.set)
@@ -1005,12 +1036,12 @@ def user_wl(username):
 			a+=1
 
 	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=40)
-	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="white",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=40,pady=2)
-	ad_wli = Button(ad_crt,text="Delete",bg="#202020",fg="white",command=lambda:user_delwl(username,tree)).grid(row=0,column=2,padx=70)
-	ad_lb2 = Label(ad_crt,text="         OR                              Specify Quantity:  ",bg="#202020",fg="white").grid(row=0,column=3)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white",buttonbackground="#202020")
-	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="white",command=lambda:user_addcart(username,ad_spn.get(),tree))
+	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=40)
+	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="#EEEEEE",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=40,pady=2)
+	ad_wli = Button(ad_crt,text="Delete",bg="#202020",fg="#EEEEEE",command=lambda:user_delwl(username,tree)).grid(row=0,column=2,padx=70)
+	ad_lb2 = Label(ad_crt,text="         OR                              Specify Quantity:  ",bg="#202020",fg="#EEEEEE").grid(row=0,column=3)
+	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="#EEEEEE",buttonbackground="#202020")
+	ad_crb = Button(ad_crt,text="Add to Cart",bg="#202020",fg="#EEEEEE",command=lambda:user_addcart(username,ad_spn.get(),tree))
 	ad_spn.grid(row=0,column=4)
 	ad_crb.grid(row=0,column=5,padx=80)
 
@@ -1042,34 +1073,34 @@ def user_ord(username):
 	mainscrn.resizable(0, 0)
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="My Orders",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
-	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+	nav_lbl = Label(navfrm,text="My Orders",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_ord.png"))
 	shartlb = Label(mainscrn,image=shopart,background="#909090")
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),state=DISABLED,bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="#EEEEEE")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),state=DISABLED,bg="#202020",fg="#EEEEEE")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="#EEEEEE")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="#EEEEEE")
 
 	sql_query = "SELECT * FROM he_orders WHERE user_id = '{}' ORDER BY doa DESC".format(username)
 	he_cursor.execute(sql_query)
@@ -1078,7 +1109,7 @@ def user_ord(username):
 	frm_tree = Frame(mainscrn,background="#909090")
 	style = ttk.Style(frm_tree)
 	style.theme_use("clam")
-	style.configure("Treeview.Heading",background="#202020",foreground="white",borderwidth=0)
+	style.configure("Treeview.Heading",background="#202020",foreground="#EEEEEE",borderwidth=0)
 	style.configure("Treeview",borderwidth=0,rowheight=56)
 	scrollbary = Scrollbar(frm_tree,orient = VERTICAL)
 	tree = ttk.Treeview(frm_tree,columns = ("Order No.","Order Total","Payment Mode","Transaction ID","Status","Shipping Speed","Tracking ID","Date of Order"),height = 9,selectmode = "extended",yscrollcommand = scrollbary.set)
@@ -1111,11 +1142,11 @@ def user_ord(username):
 			tree.insert('','end',values=(app_res[0],price,app_res[3],app_res[4],app_res[5],app_res[6],app_res[7],app_res[8]))
 
 	ad_crt = LabelFrame(mainscrn,background="#202020")
-	adl1 = Label(ad_crt,text="Select order, ",background="#202020",foreground="white").grid(row=0,column=0,padx=51)
-	but1 = Button(ad_crt,text="Show Order",bg="#202020",fg="white",command=lambda:user_oprod(tree,username)).grid(row=0,column=1,padx=51,pady=2)
-	but2 = Button(ad_crt,text="Cancel Order",bg="#202020",fg="white",command=lambda:user_canord(tree,username)).grid(row=0,column=3,padx=51)
-	but3 = Button(ad_crt,text="Change Transaction ID",bg="#202020",fg="white",command=lambda:user_chgtxn(tree,username)).grid(row=0,column=5,padx=51)
-	but4 = Button(ad_crt,text="Generate Invoice",bg="#202020",fg="white",command=lambda:user_geninv(tree)).grid(row=0,column=7,padx=51)
+	adl1 = Label(ad_crt,text="Select order, ",background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=51)
+	but1 = Button(ad_crt,text="Show Order",bg="#202020",fg="#EEEEEE",command=lambda:user_oprod(tree,username)).grid(row=0,column=1,padx=51,pady=2)
+	but2 = Button(ad_crt,text="Cancel Order",bg="#202020",fg="#EEEEEE",command=lambda:user_canord(tree,username)).grid(row=0,column=3,padx=51)
+	but3 = Button(ad_crt,text="Change Transaction ID",bg="#202020",fg="#EEEEEE",command=lambda:user_chgtxn(tree,username)).grid(row=0,column=5,padx=51)
+	but4 = Button(ad_crt,text="Generate Invoice",bg="#202020",fg="#EEEEEE",command=lambda:user_geninv(tree,username)).grid(row=0,column=7,padx=51)
 
 	shartlb.place(x=-2,y=-2)
 	navfrm.place(x=-2,y=119)
@@ -1156,7 +1187,7 @@ def user_oprod(tree,username):
 		style = ttk.Style(frm1)
 		style.theme_use("clam")
 		style.configure("Treeview",borderwidth=0,rowheight=56)
-		style.configure("Treeview.Heading",background="#202020",foreground="white",borderwidth=0)
+		style.configure("Treeview.Heading",background="#202020",foreground="#EEEEEE",borderwidth=0)
 		scrollbary = Scrollbar(frm1,orient = VERTICAL)
 		tree = ttk.Treeview(frm1,columns = ("PID","Product Name","Price","Discount","GST","Quantity","Total"),height = 9,selectmode = "extended",yscrollcommand = scrollbary.set)
 		scrollbary.config(command = tree.yview)
@@ -1192,7 +1223,7 @@ def user_oprod(tree,username):
 				gtotal += float(round(app_res[5]*((100-app_res[6])/100)*((app_res[7]+100)/100),2)*app_res[1])
 				tree.insert('','end',image=imgs_prod[a],values=(app_res[0],app_res[3],price,str(app_res[6])+'%',str(app_res[7])+'%',app_res[1],total))
 				a+=1
-		but1 = Button(mainscrn,text="Return",command=lambda:user_ord(username),bg="#202020",fg="white")
+		but1 = Button(mainscrn,text="Return",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE")
 		frm1.pack()
 		but1.pack(pady=5,ipadx=100)
 		mainscrn.mainloop()
@@ -1248,18 +1279,18 @@ def user_chgtxn(tree,username):
 			
 			payvar = StringVar()
 			payvar.set("Select Payment Mode")
-			Label(mainscrn,text=" Please select payment mode: ",bg="#202020",fg="white").grid(row=1,column=0,sticky=W,pady=10)
+			Label(mainscrn,text=" Please select payment mode: ",bg="#202020",fg="#EEEEEE").grid(row=1,column=0,sticky=W,pady=10)
 			ddon = OptionMenu(mainscrn,payvar,"Paytm","Google Pay","IMPS")
-			ddon.config(bg="#202020",fg="white")
+			ddon.config(bg="#202020",fg="#EEEEEE")
 			ddon["highlightthickness"]=0
 			ddon["menu"].config(bg="#202020")
-			ddon["menu"].config(fg="white")
+			ddon["menu"].config(fg="#EEEEEE")
 			ddon.grid(row=1,column=1,sticky=W)
-			Label(mainscrn,text=" Please enter Transaction Number: ",bg="#202020",fg="white").grid(row=2,column=0,sticky=W,pady=10)
-			trne = Entry(mainscrn,width=18,bg="#202020",fg="white")
+			Label(mainscrn,text=" Please enter Transaction Number: ",bg="#202020",fg="#EEEEEE").grid(row=2,column=0,sticky=W,pady=10)
+			trne = Entry(mainscrn,width=18,bg="#202020",fg="#EEEEEE")
 			trne.grid(row=2,column=1,sticky=W)
-			Button(mainscrn,text="Return",command=lambda:user_ord(username),bg="#202020",fg="white").grid(row=3,column=1,ipadx=30,padx=35)
-			Button(mainscrn,text="Continue",command=lambda:user_chgtxnn(username,ord_id,payvar.get(),trne.get()),bg="#202020",fg="white").grid(row=3,column=0,ipadx=30,padx=35)
+			Button(mainscrn,text="Return",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE").grid(row=3,column=1,ipadx=30,padx=35)
+			Button(mainscrn,text="Continue",command=lambda:user_chgtxnn(username,ord_id,payvar.get(),trne.get()),bg="#202020",fg="#EEEEEE").grid(row=3,column=0,ipadx=30,padx=35)
 			mainscrn.mainloop()
 
 def user_chgtxnn(username,ord_id,payvar,trxnid):
@@ -1279,7 +1310,7 @@ def user_chgtxnn(username,ord_id,payvar,trxnid):
 		messagebox.showinfo("Change Transaction Number Success!","Order Transaction ID has been changed for Order number {}".format(ord_id))
 		user_ord(username)
 
-def user_geninv(tree):
+def user_geninv(tree,username):
 	try:
 		os.mkdir("C:\\InvoiceGenerator")
 	except:
@@ -1298,11 +1329,34 @@ def user_geninv(tree):
 		elif status == "Order Cancelled":
 			messagebox.showerror("Generate Invoice Failed!","You cannot generate invoice if order is cancelled.")
 		else:
+			global mainscrn
+			mainscrn.destroy()
+			mainscrn = Tk()
+			mainscrn.grab_set()
+			mainscrn.focus_force()
+			width = 420
+			height = 60
+			screen_width = mainscrn.winfo_screenwidth()
+			screen_height = mainscrn.winfo_screenheight()
+			x = (screen_width/2) - (width/2)
+			y = (screen_height/2) - (height/2) - (height/12)
+			mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
+			mainscrn.resizable(0, 0)
+			mainscrn.title("Hacking Electronics Shop")
+			mainscrn.iconbitmap('images/icon.ico')
+			lblprogress = Label(mainscrn,text="Generating Invoice... Please Wait.",bg='#EEEEEE')
+			progress = ttk.Progressbar(mainscrn, orient = HORIZONTAL,length = 400, mode = 'determinate')
+			lblprogress.pack(pady=5)
+			progress.pack()
+			progress['value'] = 0
+			mainscrn.update_idletasks()
 			Products = []
 			sql_query = "SELECT user_id,g_total FROM he_orders WHERE order_no = {}".format(ord_id)
 			he_cursor.execute(sql_query)
 			ord_res = he_cursor.fetchall()
 			uid = ord_res[0][0]
+			progress['value'] = 14
+			mainscrn.update_idletasks()
 			if shipspd == "Low Priority":
 				gtotal = float(ord_res[0][1])
 				gtotal -= 100
@@ -1311,9 +1365,13 @@ def user_geninv(tree):
 			custlist = he_cursor.fetchall()
 			CustomerName = str(custlist[0][0]) + str(custlist[0][1])		
 			CustomerContact = str(custlist[0][2]) + "    Email: " + str(custlist[0][3])
+			progress['value'] = 28
+			mainscrn.update_idletasks()
 			sql_query = "SELECT * FROM he_{},he_products WHERE he_{}.prod_id = he_products.prod_id".format(ord_id,ord_id)
 			he_cursor.execute(sql_query)
 			prod_res = he_cursor.fetchall()
+			progress['value'] = 43
+			mainscrn.update_idletasks()
 			for i in prod_res:
 				prod = str(i[0]) + ': ' + i[3]
 				qty = i[1]
@@ -1322,6 +1380,8 @@ def user_geninv(tree):
 				total = float(qty*rate-dis)
 				tax = float(float(i[7])*0.01*total)
 				Products.append((prod,qty,rate,dis,total,tax))
+			progress['value'] = 57
+			mainscrn.update_idletasks()
 			if shipspd == "High Priority":
 				Products.append(("High Priority Shipping Charges",1,423.73,0,500,76.27))
 			else:
@@ -1329,11 +1389,15 @@ def user_geninv(tree):
 					Products.append(("Low Priority Shipping Charges",1,84.74,0.00,100.00,15.26))
 				else:
 					Products.append(("Low Priority Shipping Charges",1,84.74,84.74,0.00,0.00))
+			progress['value'] = 71
+			mainscrn.update_idletasks()
 			head = header(CustomerName,CustomerContact)
 			pdf = canvas.Canvas("C:\\InvoiceGenerator\\" + str(int(head.InvoiceNumber)) + ".pdf")
 			pdf_gen.header(head,pdf)
 			pdf_gen.middle(pdf)
 			ycooridinate = 650
+			progress['value'] = 85
+			mainscrn.update_idletasks()
 			x = 1
 			for item in Products:
 				currproduct = product(item[0],item[1],item[2],item[5],item[3])
@@ -1344,7 +1408,11 @@ def user_geninv(tree):
 			pdf.setFont("Courier-Bold",11)
 			pdf_gen.footer(pdf,Products)
 			pdf.save()
+			progress['value'] = 100
+			mainscrn.update_idletasks()
 			webbrowser.open("C:\\InvoiceGenerator\\" + str(int(head.InvoiceNumber)) + ".pdf")
+			user_ord(username)
+			mainscrn.mainloop()
 
 def user_acc(username):
 	global mainscrn
@@ -1365,44 +1433,188 @@ def user_acc(username):
 	mainscrn.resizable(0, 0)
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="My Account",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
-	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+	nav_lbl = Label(navfrm,text="My Account",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_acc.png"))
 	shartlb = Label(mainscrn,image=shopart,background="#909090")
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),state=DISABLED,bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="#EEEEEE")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),state=DISABLED,bg="#202020",fg="#EEEEEE")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),bg="#202020",fg="#EEEEEE")
 
-	Button(mainscrn,text="Logout",command=user_logout,bg="#202020",fg="white").place(x=990,y=150)
+	sql_query = "SELECT f_name,l_name,add1,add2,city,state,pin,mob,pass FROM he_users where user_id ='{}'".format(username)
+	he_cursor.execute(sql_query)
+	qur_res = he_cursor.fetchall()[0]
+
+	chg_acc = Frame(mainscrn,bg="#202020")
+	Label(chg_acc,text="Manage Account Details",font=("Arial Bold",14),fg="#EEEEEE",bg="#202020").grid(row=0,column=0,columnspan=4,padx=10,pady=10)
+	Label(chg_acc,text="First Name:",fg="#EEEEEE",bg="#202020").grid(row=1,column=0,padx=10,pady=10,sticky=E)
+	fnamc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	fnamc.grid(row=1,column=1,padx=10,pady=10)
+	fnamc.insert(0,qur_res[0])
+	Label(chg_acc,text="Last Name:",fg="#EEEEEE",bg="#202020").grid(row=1,column=2,padx=10,pady=10,sticky=E)
+	lnamc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	lnamc.grid(row=1,column=3,padx=10,pady=10)
+	lnamc.insert(0,qur_res[1])
+	Label(chg_acc,text="Address 1:",fg="#EEEEEE",bg="#202020").grid(row=2,column=0,padx=10,pady=10,sticky=E)
+	add1c = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	add1c.grid(row=2,column=1,padx=10,pady=10)
+	add1c.insert(0,qur_res[2])
+	Label(chg_acc,text="Address 2:",fg="#EEEEEE",bg="#202020").grid(row=2,column=2,padx=10,pady=10,sticky=E)
+	add2c = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	add2c.grid(row=2,column=3,padx=10,pady=10)
+	add2c.insert(0,qur_res[3])
+	Label(chg_acc,text="City:",fg="#EEEEEE",bg="#202020").grid(row=3,column=0,padx=10,pady=10,sticky=E)
+	cityc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	cityc.grid(row=3,column=1,padx=10,pady=10)
+	cityc.insert(0,qur_res[4])
+	Label(chg_acc,text="State:",fg="#EEEEEE",bg="#202020").grid(row=3,column=2,padx=10,pady=10,sticky=E)
+	statc = StringVar()
+	statc.set(qur_res[5])
+	states = ["Andaman & Nicobar","Andhra Pradesh","Arunachal Pradesh",
+	"Assam","Bihar","Chandigarh","Chhattisgarh","Dadra & Nagar Haveli",
+	"Daman & Diu","Delhi","Goa","Gujarat","Haryana","Himachal Pradesh",
+	"Jammu & Kashmir","Jharkhand","Karnataka","Kerala","Lakshadweep",
+	"Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
+	"Nagaland","Orissa","Pondicherry","Punjab","Rajasthan","Sikkim",
+	"Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttaranchal","West Bengal"]
+	st_ddon = OptionMenu(chg_acc,statc,*states)
+	st_ddon.config(bg="#202020",fg="#EEEEEE")
+	st_ddon["highlightthickness"]=0
+	st_ddon["menu"].config(bg="#202020")
+	st_ddon["menu"].config(fg="#EEEEEE")
+	st_ddon.grid(row=3,column=3,padx=10,pady=10,sticky=W)
+	Label(chg_acc,text="Pincode:",fg="#EEEEEE",bg="#202020").grid(row=4,column=0,padx=10,pady=10,sticky=E)
+	pincc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	pincc.grid(row=4,column=1,padx=10,pady=10)
+	pincc.insert(0,qur_res[6])
+	Label(chg_acc,text="Mobile:",fg="#EEEEEE",bg="#202020").grid(row=4,column=2,padx=10,pady=10,sticky=E)
+	mobic = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020")
+	mobic.grid(row=4,column=3,padx=10,pady=10)
+	mobic.insert(0,qur_res[7])
+	Button(chg_acc,text="Save New Address",bg="#202020",fg="#EEEEEE",command=lambda:user_chadd(fnamc.get(),lnamc.get(),add1c.get(),add2c.get(),cityc.get(),statc.get(),pincc.get(),mobic.get())).grid(row=5,column=0,padx=10,pady=10,columnspan=4,ipadx=50)
+
+	Label(chg_acc,text="Old Password:",fg="#EEEEEE",bg="#202020").grid(row=7,column=0,padx=10,pady=10,sticky=E)
+	oldpc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020",show='*')
+	oldpc.grid(row=7,column=1,padx=10,pady=10)
+	Label(chg_acc,text="New Password:",fg="#EEEEEE",bg="#202020").grid(row=7,column=2,padx=10,pady=10,sticky=E)
+	newpc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020",show='*')
+	newpc.grid(row=7,column=3,padx=10,pady=10)
+	Label(chg_acc,text="Retype Password:",fg="#EEEEEE",bg="#202020").grid(row=8,column=0,padx=10,pady=10,sticky=E)
+	reepc = Entry(chg_acc,width=40,fg="#EEEEEE",bg="#202020",show='*')
+	reepc.grid(row=8,column=1,padx=10,pady=10)
+	Button(chg_acc,text="Change Password",bg="#202020",fg="#EEEEEE",command=lambda:user_chpass(oldpc.get(),newpc.get(),reepc.get(),qur_res[8],username)).grid(row=9,column=0,padx=10,pady=10,columnspan=4,ipadx=50)
+
+	rgt_frm = Frame(chg_acc,bg="#202020")
+	rgt_frm.grid(row=0,column=5,rowspan=9,padx=15)
+	if len(username) > 10:
+		eduser = "Hello There! " + username[0:6] + "... "
+	else:
+		eduser = "Hello There! " + username + " "
+	Label(rgt_frm,text=eduser,fg="#EEEEEE",bg="#202020").grid(row=0,column=0)
+	Button(rgt_frm,text="Logout",command=user_logout,bg="#202020",fg="#EEEEEE").grid(row=0,column=1,padx=10,pady=10)
+	Label(rgt_frm,text="More Actions",fg="#EEEEEE",bg="#202020",font=("Arial Bold",12)).grid(row=1,column=0,padx=10,pady=10,columnspan=2)
+	Button(rgt_frm,text="Ask a Question",command=user_askq,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=10,pady=20,columnspan=2)
+	Button(rgt_frm,text="Answered Questions",command=user_readq,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=10,pady=20,columnspan=2)
+	Button(rgt_frm,text="FAQs",command=user_faq,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=10,pady=20,columnspan=2)
+	Button(rgt_frm,text="About Us",command=user_about,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=10,pady=20,columnspan=2)
+
+	he_gurimg = ImageTk.PhotoImage(Image.open("images/he_guran.png"))
+	Label(mainscrn,image=he_gurimg,background="#202020").place(x=160,y=538)
 
 	shartlb.place(x=-2,y=-2)
+	chg_acc.place(x=160,y=123)
 	navfrm.place(x=-2,y=119)
 	sh_but1.place(x=819,y=10)
 	sh_but2.place(x=900,y=10)
 	sh_but3.place(x=975,y=10)
 	sh_but4.place(x=1060,y=10)
 	mainscrn.mainloop()
+
+def user_chadd(fname,lname,add1,add2,city,state,pin,mob):
+	if len(fname) > 255:
+		messagebox.showerror("Change Address Failed!","Length of Firstname is too long.")
+	elif len(fname) == 0:
+		messagebox.showerror("Change Address Failed!","Firstname not entered.")
+	elif len(lname) > 255:
+		messagebox.showerror("Change Address Failed!","Length of Lastname is too long.")
+	elif len(lname) == 0:
+		messagebox.showerror("Change Address Failed!","Lastname not entered.")
+	elif len(add1) > 255:
+		messagebox.showerror("Change Address Failed!","Length of Address 1 is too long.")
+	elif len(add1) == 0:
+		messagebox.showerror("Change Address Failed!","Address 1 not entered.")
+	elif len(add2) > 255:
+		messagebox.showerror("Change Address Failed!","Length of Address 2 is too long.")
+	elif len(add2) == 0:
+		messagebox.showerror("Change Address Failed!","Address 2 not entered.")
+	elif len(city) > 50:
+		messagebox.showerror("Change Address Failed!","Length of City is too long.")
+	elif len(city) == 0:
+		messagebox.showerror("Change Address Failed!","City not entered.")
+	elif len(pin) == 0:
+		messagebox.showerror("Change Address Failed!","Pincode not entered.")
+	elif len(pin) != 6:
+		messagebox.showerror("Change Address Failed!","Pincode is not of 6 digits.")
+	elif len(mob) == 0:
+		messagebox.showerror("Change Address Failed!","Mobile number not entered.")
+	elif len(mob) != 10:
+		messagebox.showerror("Change Address Failed!","Mobile number is not of 10 digits.")
+	else:
+		sql_query = "UPDATE he_users SET f_name = '{}',l_name = '{}',mob = '{}',add1 = '{}',add2 = '{}',city = '{}',state = '{}',pin = '{}'".format(fname,lname,mob,add1,add2,city,state,pin)
+		he_cursor.execute(sql_query)
+		he_db.commit()
+		messagebox.showinfo("Address Changed Successfully!","Your new address has been saved.")
+
+def user_chpass(opass,npass,rpass,cpass,username):
+	if opass != cpass:
+		messagebox.showerror("Password change Failed!","Old password is not correct.")
+	elif npass != rpass:
+		messagebox.showerror("Password change Failed!","Reentered password is not correct.")
+	else:
+		if len(npass) > 30:
+			messagebox.showerror("Password change Failed!","Password is longer than 30 characters.")
+		else:
+			sql_query = "UPDATE he_users SET pass = '{}'".format(npass)
+			he_cursor.execute(sql_query)
+			he_db.commit()
+			messagebox.showinfo("Password Changed Successfully!","Your new password has been saved.")
+			user_acc(username)
+
+def user_askq():
+	messagebox.showinfo("Ask a Question","This part of shop is still under development.")
+
+def user_readq():
+	messagebox.showinfo("Answered Questions","This part of shop is still under development.")
+
+def user_faq():
+	messagebox.showinfo("FAQs","This part of shop is still under development.")
+
+def user_about():
+	try:
+		webbrowser.open("images\\about.pdf")
+	except:
+		messagebox.showerror("About Us Failed!","About Us failed to load. Error Code: no_file")
 
 def user_cart(username):
 	global mainscrn
@@ -1423,27 +1635,27 @@ def user_cart(username):
 	mainscrn.resizable(0, 0)
 
 	navfrm = LabelFrame(mainscrn,pady=8,background="#202020")
-	nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="white").grid(row=0,column=0,padx=4,pady=1,sticky=W)
-	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="white").grid(row=1,column=0,padx=5,pady=0,sticky=W)
-	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="white").grid(row=2,column=0,padx=5,pady=0,sticky=W)
-	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="white").grid(row=3,column=0,padx=5,pady=0,sticky=W)
-	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=4,column=0,padx=5,pady=0,sticky=W)
-	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=5,column=0,padx=5,pady=0,sticky=W)
-	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=6,column=0,padx=5,pady=0,sticky=W)
-	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="white").grid(row=7,column=0,padx=5,pady=0,sticky=W)
-	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="white").grid(row=8,column=0,padx=5,pady=0,sticky=W)
-	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="white").grid(row=9,column=0,padx=5,pady=0,sticky=W)
-	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="white").grid(row=10,column=0,padx=5,pady=0,sticky=W)
-	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="white").grid(row=11,column=0,padx=5,pady=0,sticky=W)
-	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="white").grid(row=12,column=0,padx=5,pady=0,sticky=W)
-	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="white").grid(row=13,column=0,padx=5,pady=0,sticky=W)
-	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="white").grid(row=14,column=0,padx=5,pady=0,sticky=W)
-	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="white").grid(row=15,column=0,padx=5,pady=0,sticky=W)
-	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="white").grid(row=16,column=0,padx=5,pady=0,sticky=W)
-	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="white").grid(row=17,column=0,padx=5,pady=0,sticky=W)
-	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="white").grid(row=18,column=0,padx=5,pady=0,sticky=W)
-	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="white").grid(row=19,column=0,padx=5,pady=0,sticky=W)
-	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="white").grid(row=20,column=0,padx=5,pady=0,sticky=W)
+	nav_lbl = Label(navfrm,text="Mechanical Parts",font=("Arial Bold",10),background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=4,pady=1,sticky=W)
+	nav_but1 = Button(navfrm,text="Top Deals",command=lambda:user_qur("Top Deals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=1,column=0,padx=5,pady=0,sticky=W)
+	nav_but2 = Button(navfrm,text="New Arrivals",command=lambda:user_qur("New Arrivals",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=2,column=0,padx=5,pady=0,sticky=W)
+	nav_but3 = Button(navfrm,text="Learning and Robotics",command=lambda:user_qur("Learning and Robotics",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=3,column=0,padx=5,pady=0,sticky=W)
+	nav_but4 = Button(navfrm,text="Drones and Parts",command=lambda:user_qur("Drones and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=4,column=0,padx=5,pady=0,sticky=W)
+	nav_but5 = Button(navfrm,text="E-Bikes and Parts",command=lambda:user_qur("E-Bikes and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=5,column=0,padx=5,pady=0,sticky=W)
+	nav_but6 = Button(navfrm,text="3D Printers and Parts",command=lambda:user_qur("3D Printers and Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=6,column=0,padx=5,pady=0,sticky=W)
+	nav_but7 = Button(navfrm,text="Batteries",command=lambda:user_qur("Batteries",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=7,column=0,padx=5,pady=0,sticky=W)
+	nav_but8 = Button(navfrm,text="Motors, Drivers, Actuators",command=lambda:user_qur("Motors, Drivers, Actuators",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=8,column=0,padx=5,pady=0,sticky=W)
+	nav_but9 = Button(navfrm,text="Development Boards",command=lambda:user_qur("Development Boards",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=9,column=0,padx=5,pady=0,sticky=W)
+	nav_but10 = Button(navfrm,text="Arduino",command=lambda:user_qur("Arduino",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=10,column=0,padx=5,pady=0,sticky=W)
+	nav_but11 = Button(navfrm,text="Raspberry Pi",command=lambda:user_qur("Raspberry Pi",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=11,column=0,padx=5,pady=0,sticky=W)
+	nav_but12 = Button(navfrm,text="Sensors",command=lambda:user_qur("Sensors",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=12,column=0,padx=5,pady=0,sticky=W)
+	nav_but13 = Button(navfrm,text="IoT and Wireless",command=lambda:user_qur("IoT and Wireless",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=13,column=0,padx=5,pady=0,sticky=W)
+	nav_but14 = Button(navfrm,text="Displays",command=lambda:user_qur("Displays",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=14,column=0,padx=5,pady=0,sticky=W)
+	nav_but15 = Button(navfrm,text="Power Supply",command=lambda:user_qur("Power Supply",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=15,column=0,padx=5,pady=0,sticky=W)
+	nav_but16 = Button(navfrm,text="Electronic Modules",command=lambda:user_qur("Electronic Modules",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=16,column=0,padx=5,pady=0,sticky=W)
+	nav_but17 = Button(navfrm,text="Electronic Components",command=lambda:user_qur("Electronic Components",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=17,column=0,padx=5,pady=0,sticky=W)
+	nav_but18 = Button(navfrm,text="Wires and Cables",command=lambda:user_qur("Wires and Cables",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=18,column=0,padx=5,pady=0,sticky=W)
+	nav_but19 = Button(navfrm,text="Instruments and Tools",command=lambda:user_qur("Instruments and Tools",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=19,column=0,padx=5,pady=0,sticky=W)
+	nav_but20 = Button(navfrm,text="Mechanical Parts",command=lambda:user_qur("Mechanical Parts",username),relief=FLAT,bg="#202020",fg="#EEEEEE").grid(row=20,column=0,padx=5,pady=0,sticky=W)
 
 	sql_query = "SELECT * FROM {}_cart,he_products WHERE {}_cart.prod_id = he_products.prod_id".format(username,username)
 	he_cursor.execute(sql_query)
@@ -1452,7 +1664,7 @@ def user_cart(username):
 	frm_tree = Frame(mainscrn,background="#909090")
 	style = ttk.Style(frm_tree)
 	style.theme_use("clam")
-	style.configure("Treeview.Heading",background="#202020",foreground="white",borderwidth=0)
+	style.configure("Treeview.Heading",background="#202020",foreground="#EEEEEE",borderwidth=0)
 	style.configure("Treeview",borderwidth=0,rowheight=56)
 	scrollbary = Scrollbar(frm_tree,orient = VERTICAL)
 	tree = ttk.Treeview(frm_tree,columns = ("PID","Product Name","Price","Discount","GST","Quantity","Total"),height = 9,selectmode = "extended",yscrollcommand = scrollbary.set)
@@ -1492,22 +1704,22 @@ def user_cart(username):
 
 	shopart = ImageTk.PhotoImage(Image.open("images/shop_art/my_cart.png"))
 	shartlb = Label(mainscrn,image=shopart,background="#909090")
-	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="white")
-	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="white")
-	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="white")
-	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),state=DISABLED,bg="#202020",fg="white")
+	sh_but1 = Button(mainscrn,text="My Wishlist",command=lambda:user_wl(username),bg="#202020",fg="#EEEEEE")
+	sh_but2 = Button(mainscrn,text="My Orders",command=lambda:user_ord(username),bg="#202020",fg="#EEEEEE")
+	sh_but3 = Button(mainscrn,text="My Account",command=lambda:user_acc(username),bg="#202020",fg="#EEEEEE")
+	sh_but4 = Button(mainscrn,text="My Cart",command=lambda:user_cart(username),state=DISABLED,bg="#202020",fg="#EEEEEE")
 
 	ad_crt = LabelFrame(mainscrn,background="#202020")
-	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="white").grid(row=0,column=0,padx=30)
-	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="white",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=30,pady=2)
-	ad_wli = Button(ad_crt,text="Delete",bg="#202020",fg="white",command=lambda:user_delcart(username,tree)).grid(row=0,column=2,padx=30)
-	ad_lb2 = Label(ad_crt,text="             OR                  Change Quantity:  ",bg="#202020",fg="white").grid(row=0,column=3)
-	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="white",buttonbackground="#202020")
-	ad_crb = Button(ad_crt,text="Update Cart",bg="#202020",fg="white",command=lambda:user_editcart(username,ad_spn.get(),tree))
-	ad_chk = Button(ad_crt,text="Checkout",bg="#202020",fg="white",command=lambda:user_ship(username,gtotal,tree))
+	ad_lb1 = Label(ad_crt,text="Select item, ",background="#202020",foreground="#EEEEEE").grid(row=0,column=0,padx=30)
+	ad_des = Button(ad_crt,text="More Details",bg="#202020",fg="#EEEEEE",command=lambda:user_proddet(tree)).grid(row=0,column=1,padx=30,pady=2)
+	ad_wli = Button(ad_crt,text="Delete",bg="#202020",fg="#EEEEEE",command=lambda:user_delcart(username,tree)).grid(row=0,column=2,padx=30)
+	ad_lb2 = Label(ad_crt,text="             OR                  Change Quantity:  ",bg="#202020",fg="#EEEEEE").grid(row=0,column=3)
+	ad_spn = Spinbox(ad_crt,from_=1,to=999,width=3,bg="#202020",fg="#EEEEEE",buttonbackground="#202020")
+	ad_crb = Button(ad_crt,text="Update Cart",bg="#202020",fg="#EEEEEE",command=lambda:user_editcart(username,ad_spn.get(),tree))
+	ad_chk = Button(ad_crt,text="Checkout",bg="#202020",fg="#EEEEEE",command=lambda:user_ship(username,gtotal,tree))
 	ad_spn.grid(row=0,column=4)
 	ad_crb.grid(row=0,column=5,padx=30)
-	ad_lb3 = Label(ad_crt,text="OR",bg="#202020",fg="white").grid(row=0,column=6,padx=35)
+	ad_lb3 = Label(ad_crt,text="OR",bg="#202020",fg="#EEEEEE").grid(row=0,column=6,padx=35)
 	ad_chk.grid(row=0,column=7,padx=30)
 
 	shartlb.place(x=-2,y=-2)
@@ -1618,11 +1830,11 @@ Amount: ₹{}/-
 	y = (screen_height/2) - (height/2) - (height/18)
 	mainscrn.geometry("%dx%d+%d+%d" % (width, height,x,y))
 	mainscrn.resizable(0, 0)
-	lbl = Label(mainscrn,text=tc,justify=LEFT,bg="#202020",fg="white")
+	lbl = Label(mainscrn,text=tc,justify=LEFT,bg="#202020",fg="#EEEEEE")
 	chkvar = IntVar()
-	chkbx = Checkbutton(mainscrn,text="Yes, I agree to the Terms and Conditions and have made the Payment.",selectcolor="#202020",activebackground="#202020",activeforeground="white",bg="#202020",fg="white",variable=chkvar)
-	okbut = Button(mainscrn,text="Continue",bg="#202020",fg="white",command=lambda:user_pay(username,gtotal,shipspd,chkvar.get()))
-	cnbut = Button(mainscrn,text="Cancel",bg="#202020",fg="white",command=lambda:user_cart(username))
+	chkbx = Checkbutton(mainscrn,text="Yes, I agree to the Terms and Conditions and have made the Payment.",selectcolor="#202020",activebackground="#202020",activeforeground="#EEEEEE",bg="#202020",fg="#EEEEEE",variable=chkvar)
+	okbut = Button(mainscrn,text="Continue",bg="#202020",fg="#EEEEEE",command=lambda:user_pay(username,gtotal,shipspd,chkvar.get()))
+	cnbut = Button(mainscrn,text="Cancel",bg="#202020",fg="#EEEEEE",command=lambda:user_cart(username))
 	lbl.grid(row=0,column=0,columnspan=2,padx=5)
 	chkbx.grid(row=1,column=0,columnspan=2)
 	okbut.grid(row=2,column=0,ipadx=30)
@@ -1653,19 +1865,19 @@ def user_pay(username,gtotal,shipspd,chkvar):
 		
 		payvar = StringVar()
 		payvar.set("Select Payment Mode")
-		Label(mainscrn,text="Please make the payment with Paytm/Google Pay/IMPS\nwith details as on last page. And then enter the\nUPI Transaction ID/Paytm Order No. Below.",bg="#202020",fg="white",justify=LEFT).grid(row=0,column=0,columnspan=2,padx=40)
-		Label(mainscrn,text=" Please select payment mode: ",bg="#202020",fg="white").grid(row=1,column=0,sticky=W,pady=10)
+		Label(mainscrn,text="Please make the payment with Paytm/Google Pay/IMPS\nwith details as on last page. And then enter the\nUPI Transaction ID/Paytm Order No. Below.",bg="#202020",fg="#EEEEEE",justify=LEFT).grid(row=0,column=0,columnspan=2,padx=40)
+		Label(mainscrn,text=" Please select payment mode: ",bg="#202020",fg="#EEEEEE").grid(row=1,column=0,sticky=W,pady=10)
 		ddon = OptionMenu(mainscrn,payvar,"Paytm","Google Pay","IMPS")
 		ddon.grid(row=1,column=1,sticky=W)
-		ddon.config(bg="#202020",fg="white")
+		ddon.config(bg="#202020",fg="#EEEEEE")
 		ddon["highlightthickness"]=0
 		ddon["menu"].config(bg="#202020")
-		ddon["menu"].config(fg="white")
-		Label(mainscrn,text=" Please enter Transaction Number: ",bg="#202020",fg="white").grid(row=2,column=0,sticky=W,pady=10)
-		trne = Entry(mainscrn,width=18,bg="#202020",fg="white")
+		ddon["menu"].config(fg="#EEEEEE")
+		Label(mainscrn,text=" Please enter Transaction Number: ",bg="#202020",fg="#EEEEEE").grid(row=2,column=0,sticky=W,pady=10)
+		trne = Entry(mainscrn,width=18,bg="#202020",fg="#EEEEEE")
 		trne.grid(row=2,column=1,sticky=W)
-		Button(mainscrn,text="Return",command=lambda:user_cart(username),bg="#202020",fg="white").grid(row=3,column=1,ipadx=30,padx=35)
-		Button(mainscrn,text="Continue",command=lambda:user_paid(username,gtotal,shipspd,payvar.get(),trne.get()),bg="#202020",fg="white").grid(row=3,column=0,ipadx=30,padx=35)
+		Button(mainscrn,text="Return",command=lambda:user_cart(username),bg="#202020",fg="#EEEEEE").grid(row=3,column=1,ipadx=30,padx=35)
+		Button(mainscrn,text="Continue",command=lambda:user_paid(username,gtotal,shipspd,payvar.get(),trne.get()),bg="#202020",fg="#EEEEEE").grid(row=3,column=0,ipadx=30,padx=35)
 		mainscrn.mainloop()
 
 def user_paid(username,gtotal,shipspd,payvar,trxnid):
@@ -1693,7 +1905,7 @@ def user_paid(username,gtotal,shipspd,payvar,trxnid):
 		mainscrn.resizable(0, 0)
 		mainscrn.title("Hacking Electronics Shop")
 		mainscrn.iconbitmap('images/icon.ico')
-		lblprogress = Label(mainscrn,text="Placing Order... Please Wait.",bg='white')
+		lblprogress = Label(mainscrn,text="Placing Order... Please Wait.",bg='#EEEEEE')
 		progress = ttk.Progressbar(mainscrn, orient = HORIZONTAL,length = 400, mode = 'determinate')
 		lblprogress.pack(pady=5)
 		progress.pack()
