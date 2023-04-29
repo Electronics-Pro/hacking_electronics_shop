@@ -1,5 +1,5 @@
 # hacking_electronics_shop v0.85
-The repository for IP project code... adding details later.
+The repository for IP project code.
 
 Files:
 1. crt_db.py : use this to create the database and tables.
